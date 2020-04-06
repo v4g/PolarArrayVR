@@ -5,6 +5,7 @@ import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import {AdvancedDynamicTexture, StackPanel, TextBlock, Control, ColorPicker, Button} from "@babylonjs/gui";
+import { VRState } from "./vr-state";
 
 import "@babylonjs/core/Helpers/sceneHelpers";
 import "@babylonjs/core/Loading/Plugins/babylonFileLoader";
@@ -39,6 +40,7 @@ class Playground {
 class MyScene{
     scene: Scene;
     myGround: Mesh;
+    vrState: VRState;
     
     // floatingUI: AdvancedDynamicTexture;
     constructor(engine: Engine){
@@ -48,14 +50,41 @@ class MyScene{
         var light2 = new PointLight("light2", new Vector3(0, 1, -1), this.scene);
         // Add and manipulate meshes in the scene
         var sphere = MeshBuilder.CreateSphere("sphere", {diameter:2}, this.scene);
+        
         this.myGround = MeshBuilder.CreateGround("myGround", { height: 15, width: 10, subdivisions: 4 }, this.scene);
         let standardMaterial = new StandardMaterial("ground_mat",this.scene);
         standardMaterial.diffuseColor = new Color3(0.5,0.5,0.5);
         this.myGround.material = standardMaterial;
         this.myGround.position = new Vector3(0, 0, 0);
         this.myGround.isPickable = false;
+        
         var webVr = this.scene.createDefaultVRExperience();
         webVr.enableInteractions();
+        
+        this.vrState = new VRState();
+
+        this.scene.registerBeforeRender(()=>{
+            this.beforeRender();            
+        });
+        webVr.webVRCamera.onControllersAttachedObservable.add(()=>{
+            this.vrState.valid = true;
+            if (webVr.webVRCamera.leftController != null){
+                this.vrState.leftController = webVr.webVRCamera.leftController;
+                webVr.webVRCamera.leftController.onMainButtonStateChangedObservable.add(()=>{
+                });
+            }
+            if (webVr.webVRCamera.rightController != null)
+            {
+                this.vrState.rightController = webVr.webVRCamera.rightController;
+                webVr.webVRCamera.rightController.onSecondaryButtonStateChangedObservable.add((event)=>{
+            });
+                
+            }   
+        })
+    }
+
+    beforeRender() {
+
     }
 }
 /******* End of the create scene function ******/    
