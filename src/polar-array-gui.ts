@@ -1,5 +1,7 @@
 import {VRState} from './vr-state';
-import { MeshBuilder, Mesh } from '@babylonjs/core';
+import { MeshBuilder, Mesh} from '@babylonjs/core';
+import {SceneState} from './index';
+import {Helpers} from './helpers';
 
 /**
  * This class will be responsible for creating all the GUIs used in creating
@@ -9,13 +11,13 @@ export class PolarArrayGUI {
     private static instance: PolarArrayGUI;
     private mAxisCylinder: Mesh;
     private constructor() {
-        let diameter = 1.0;
+        let diameter = 0.05;
         this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", {height: 1, diameter});
         this.mAxisCylinder.setEnabled(false);
         this.mAxisCylinder.isVisible = false;
         
     }
-    getInstance(): PolarArrayGUI {
+    static getInstance(): PolarArrayGUI {
         if (!PolarArrayGUI.instance) {
             PolarArrayGUI.instance = new PolarArrayGUI();
         }
@@ -27,6 +29,8 @@ export class PolarArrayGUI {
         // TODO: Monitor the controller movement and render a cylinder between them
         // TODO: Also set listener functions for the controller buttons to know when it has ended
         // Controller can be accessed through VRState
+        SceneState.getInstance().scene.addMesh(this.mAxisCylinder);
+        SceneState.getInstance().beforeRender.set("gui", this.renderAxisCylinder.bind(this));
     }
 
     // Here you can define the rest of the parameters of the polar array, you'd have to render the protractor,
@@ -59,6 +63,6 @@ export class PolarArrayGUI {
         this.mAxisCylinder.position.copyFrom(position);
         this.mAxisCylinder.setEnabled(true);
         this.mAxisCylinder.isVisible = true;
+        this.mAxisCylinder.rotationQuaternion = Helpers.QuaternionFromUnitVectors(Helpers.UP, vLR);
     }
-
 }

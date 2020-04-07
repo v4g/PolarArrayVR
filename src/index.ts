@@ -41,7 +41,7 @@ class Playground {
 export class SceneState {
     scene!: Scene;
     private static instance: SceneState;
-    
+    beforeRender: Map<string,{ ( ) : void }>  = new Map<string, { ( ) : void }>();
     private constructor() {
 
     }
@@ -51,6 +51,15 @@ export class SceneState {
             SceneState.instance = new SceneState();
         }
         return SceneState.instance;
+    }
+
+    callAllBeforeRenders() {
+        let iter = this.beforeRender.values();
+        let first = iter.next();
+        while(!first.done) {
+            first.value();
+            first = iter.next();
+        }
     }
 };
 
@@ -104,7 +113,7 @@ class MyScene{
     }
 
     beforeRender() {
-
+        SceneState.getInstance().callAllBeforeRenders();
     }
 }
 /******* End of the create scene function ******/    

@@ -1,4 +1,5 @@
 import {Mesh} from "@babylonjs/core";
+import {PolarArrayGUI} from './polar-array-gui';
 
 /**
  * This class will be resposible for ultimately creating all
@@ -26,6 +27,7 @@ export class PolarArrayManager {
     // The manager will be in different states depending on where in the execution it is
     createPolarArray(mesh: Mesh) {
         // initialize GUI for Axis
+        PolarArrayGUI.getInstance().enterAxisMode();
         
     }
 
