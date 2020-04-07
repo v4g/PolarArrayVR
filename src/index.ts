@@ -6,6 +6,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import {AdvancedDynamicTexture, StackPanel, TextBlock, Control, ColorPicker, Button} from "@babylonjs/gui";
 import { VRState } from "./vr-state";
+import { PolarArrayManager } from "./polar-array-manager";
 
 import "@babylonjs/core/Helpers/sceneHelpers";
 import "@babylonjs/core/Loading/Plugins/babylonFileLoader";
@@ -37,6 +38,22 @@ class Playground {
 
 }
 
+export class SceneState {
+    scene!: Scene;
+    private static instance: SceneState;
+    
+    private constructor() {
+
+    }
+
+    static getInstance(): SceneState {
+        if (!SceneState.instance) {
+            SceneState.instance = new SceneState();
+        }
+        return SceneState.instance;
+    }
+};
+
 class MyScene{
     scene: Scene;
     myGround: Mesh;
@@ -61,8 +78,9 @@ class MyScene{
         var webVr = this.scene.createDefaultVRExperience();
         webVr.enableInteractions();
         
-        this.vrState = new VRState();
-
+        this.vrState = VRState.getInstance();
+        let sceneState = SceneState.getInstance();
+        sceneState.scene = this.scene;
         this.scene.registerBeforeRender(()=>{
             this.beforeRender();            
         });
@@ -77,9 +95,11 @@ class MyScene{
             {
                 this.vrState.rightController = webVr.webVRCamera.rightController;
                 webVr.webVRCamera.rightController.onSecondaryButtonStateChangedObservable.add((event)=>{
-            });
-                
-            }   
+            });            
+            }
+            let pam = PolarArrayManager.getInstance(); 
+            pam.createPolarArray(sphere);
+           
         });
     }
 

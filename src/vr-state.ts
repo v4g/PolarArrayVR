@@ -4,9 +4,17 @@ export class VRState {
     leftController!: WebVRController;
     rightController!: WebVRController;
     camera!: Camera;
+    private static instance: VRState;
     
-    constructor() {
+    private constructor() {
 
+    }
+
+    static getInstance(): VRState {
+        if (!VRState.instance) {
+            VRState.instance = new VRState();
+        }
+        return VRState.instance;
     }
 
     isControllerTwisted() {
