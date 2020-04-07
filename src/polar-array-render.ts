@@ -1,5 +1,5 @@
 import { PolarArray } from "./polar-array";
-import { Mesh, Quaternion } from "@babylonjs/core";
+import { Mesh, Quaternion, Vector3 } from "@babylonjs/core";
 import { SceneState } from './index';
 
 /**
@@ -10,11 +10,15 @@ export class PolarArrayRender {
     copies: Mesh[] = []; // Stores the copies of the mesh
     polarArray: PolarArray;
     constructor(polar: PolarArray) {
+        console.log("Creating copies");
         for (let i = 1; i < polar.n_copies; i++) {
             let newCopy = polar.mesh.clone();
-            let angle = polar.totalAngle/polar.n_copies;
+            let angle = i * polar.totalAngle/polar.n_copies;
+            console.log(angle, polar.axis);
             let quaternion = Quaternion.RotationAxis(polar.axis, angle);
-            newCopy.rotationQuaternion = quaternion;
+            let newPosition = new Vector3();
+            newCopy.position.rotateByQuaternionAroundPointToRef(quaternion, polar.point, newPosition);
+            newCopy.position.copyFrom(newPosition);
             this.copies.push(newCopy);
             SceneState.getInstance().scene.addMesh(newCopy);
         }
