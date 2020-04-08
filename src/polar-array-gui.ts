@@ -9,13 +9,9 @@ import { PolarArrayManager } from './polar-array-manager';
  * polar arrays
  */
 export class PolarArrayGUI {
-    static readonly NONE = 0;
-    static readonly AXIS_MODE = 1;
-
     private static instance: PolarArrayGUI;
     private mAxisCylinder: Mesh;
     private axisState = new AxisModeState();
-    private state = PolarArrayGUI.NONE;
     private constructor() {
         let diameter = 0.05;
         this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", {height: 1, diameter});
@@ -34,7 +30,6 @@ export class PolarArrayGUI {
     enterAxisMode(){
         // Controller can be accessed through VRState
         this.axisState = new AxisModeState();
-        this.state = PolarArrayGUI.AXIS_MODE;
         SceneState.getInstance().scene.addMesh(this.mAxisCylinder);
         SceneState.getInstance().beforeRender.set("gui", this.axisModeBeforeRender.bind(this));
         
@@ -46,18 +41,12 @@ export class PolarArrayGUI {
         // Set listener functions for the controller buttons to know when it has ended
         this.axisState.lObservable = this.axisModeButtonListenerL.bind(this);
         this.axisState.rObservable = this.axisModeButtonListenerR.bind(this);
-        VRState.getInstance().leftController.onTriggerStateChangedObservable.add(this.axisState.lObservable);
-        VRState.getInstance().rightController.onTriggerStateChangedObservable.add(this.axisState.rObservable);
+        VRState.getInstance().leftController.onSecondaryButtonStateChangedObservable.add(this.axisState.lObservable);
+        VRState.getInstance().rightController.onSecondaryButtonStateChangedObservable.add(this.axisState.rObservable);
     }
 
     exitAxisMode() {
-        if (this.state == PolarArrayGUI.AXIS_MODE) {
-            console.log("Exiting Axis Mode");
-            this.state = PolarArrayGUI.NONE;
-            VRState.getInstance().leftController.onTriggerStateChangedObservable.remove(this.axisState.lObservable);
-            VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.axisState.rObservable);
-            PolarArrayManager.getInstance().setAxis(this.axisState);
-        }
+        PolarArrayManager.getInstance().setAxis(this.axisState.rPosition.subtract(this.axisState.lPosition));
     }
 
     // Here you can define the rest of the parameters of the polar array, you'd have to render the protractor,
@@ -69,23 +58,15 @@ export class PolarArrayGUI {
     }
 
     // These should notify the PolarArrayManager that point on the axis was selected
-    axisModeButtonListenerL(event: any) {
-        if (!event.pressed)
-            return;
+    axisModeButtonListenerL() {
         this.axisState.leftDecided = true;
-        this.axisState.lPosition = VRState.getInstance().leftController.devicePosition.clone();
-        console.log("L Button was Pressed");
         if (this.axisState.rightDecided) {
             this.exitAxisMode();
         }
     }
-    axisModeButtonListenerR(event: any) {
-        if (!event.pressed)
-            return;
+    axisModeButtonListenerR() {
         this.axisState.rightDecided = true;
-        this.axisState.rPosition = VRState.getInstance().rightController.devicePosition.clone();
-        
-        if (this.axisState.leftDecided) {
+        if (this.axisState.rightDecided) {
             this.exitAxisMode();
         }
     }
