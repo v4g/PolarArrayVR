@@ -77,7 +77,6 @@ class MyScene{
         // Add and manipulate meshes in the scene
         var sphere = MeshBuilder.CreateSphere("sphere", {diameter:0.02}, this.scene);
         sphere.position.set(0, 2, 1);
-        console.log("something");
         
         this.myGround = MeshBuilder.CreateGround("myGround", { height: 15, width: 10, subdivisions: 4 }, this.scene);
         let standardMaterial = new StandardMaterial("ground_mat",this.scene);
