@@ -1,7 +1,7 @@
-import { Mesh, Vector3 } from "@babylonjs/core";
-import { PolarArrayGUI, AxisModeState } from './polar-array-gui';
-import { PolarArray } from './polar-array';
-import { PolarArrayRender } from './polar-array-render';
+import {Mesh, Vector3} from "@babylonjs/core";
+import {PolarArrayGUI} from './polar-array-gui';
+import {PolarArray} from './polar-array';
+import {PolarArrayRender} from './polar-array-render';
 
 /**
  * This class will be resposible for ultimately creating all
@@ -29,18 +29,16 @@ export class PolarArrayManager {
     // The manager will be in different states depending on where in the execution it is
     createPolarArray(mesh: Mesh) {
         // initialize GUI for Axis
-        this.currentPolarArray = new PolarArray(mesh);
         PolarArrayGUI.getInstance().enterAxisMode();
-
+        
     }
 
     // Set an axis for the polar array, this should render the polar array
-    setAxis(axisState: AxisModeState) {
+    setAxis(axis: Vector3) {
         if (this.currentPolarArray) {
-            this.currentPolarArray.calculatePointAndAxisOfRotation(axisState.lPosition, axisState.rPosition);
-            // TODO: Store this rendering and polar array somewhere
-            let render = new PolarArrayRender(this.currentPolarArray);
-
+           this.currentPolarArray.axis = axis.clone();  
         }
+        // TODO: Store this rendering and polar array somewhere
+        let render = new PolarArrayRender(this.currentPolarArray); 
     }
 }

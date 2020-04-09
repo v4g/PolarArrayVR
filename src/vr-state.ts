@@ -4,6 +4,7 @@ export class VRState {
     leftController!: WebVRController;
     rightController!: WebVRController;
     camera!: Camera;
+    head!: WebVRFreeCamera;
     private static instance: VRState;
     
     private constructor() {
