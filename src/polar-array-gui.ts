@@ -122,17 +122,14 @@ export class PolarArrayGUI {
         numPanel.addControl(numBlock);
         numPanel.addControl(butPalette);
 
-        // let plane = MeshBuilder.CreatePlane("plane", { size: 1 }, scene);
-        // let advancedTextureNew = GUI.AdvancedDynamicTexture.CreateForMesh(plane)
-        // advancedTextureNew.addControl(numPanel);
-        // scene.onBeforeRenderObservable.add(() => {
-        //     if (vrHelper.webVRCamera.leftController) {
-        //         head.rotationQuaternion = vrHelper.webVRCamera.deviceRotationQuaternion.clone()
-        //         plane.position = VRState.getInstance().leftController.devicePosition
-        //         plane.position.y += 0.1
-        //         plane.rotationQuaternion = head.rotationQuaternion
-        //     }
-        // })
+        let plane = MeshBuilder.CreatePlane("plane", { size: 1 }, SceneState.getInstance().scene);
+        let advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(plane)
+        advancedTexture.addControl(numPanel);       
+        SceneState.getInstance().scene.onBeforeRenderObservable.add(() => {  
+            plane.position = VRState.getInstance().leftController.devicePosition.clone();
+            plane.position.y += 0.1;
+            plane.rotationQuaternion = VRState.getInstance().head.deviceRotationQuaternion.clone();                  
+        })
 
         num1.onPointerClickObservable.add((data, state) => {
             numBlock.text += "1";
