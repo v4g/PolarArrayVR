@@ -1,4 +1,4 @@
-import { Vector3, Quaternion } from "@babylonjs/core";
+import { Vector3, Quaternion, Camera, Mesh, WebVRFreeCamera, TargetCamera } from "@babylonjs/core";
 
 export class Helpers {
     static readonly UP = new Vector3(0, 1, 0);
@@ -7,4 +7,47 @@ export class Helpers {
         let angle = Vector3.GetAngleBetweenVectors(v1,v2,axis);
         return Quaternion.RotationAxis(axis, angle);
     }
+    static lookAtCamera(camera: Camera, plane: Mesh) {
+        let distance = 5;
+        if (camera instanceof WebVRFreeCamera) {
+            camera = camera as WebVRFreeCamera;
+            var forward = camera.getForwardRay(5).direction.scaleInPlace(distance);
+            var flipped_position =  forward.scale(2).add(camera.position);
+            plane.lookAt(flipped_position);
+        }
+        else {
+            camera = (camera as TargetCamera);
+                
+            if (camera instanceof TargetCamera){
+                var forward = new Vector3().copyFrom(camera.getTarget()).subtract(camera.position).normalize();
+                // have to do this because lookat flips it horizontallly
+                var flipped_position =  forward.scale(2*distance).add(camera.position);
+                plane.lookAt(flipped_position);
+            }
+        }
+    }
+    static moveObjectToCamera(camera: Camera, plane: Mesh, distance = 5, y_offest = 0) {
+        if (camera instanceof WebVRFreeCamera) {
+            camera = camera as WebVRFreeCamera;
+            var forward = camera.getForwardRay(5).direction.scaleInPlace(distance);
+            var new_position = camera.globalPosition.add(forward);
+            new_position.y += y_offest;
+            plane.position.copyFrom(new_position);
+            var flipped_position =  forward.scale(2).add(camera.globalPosition);
+            plane.lookAt(flipped_position);
+        }
+        else {
+            camera = (camera as TargetCamera);
+                
+            if (camera instanceof TargetCamera){
+                var forward = new Vector3().copyFrom(camera.getTarget()).subtract(camera.position).normalize();
+                var new_position =  forward.scale(distance).add(camera.position);
+                plane.position.copyFrom(new_position);
+                // have to do this because lookat flips it horizontallly
+                var flipped_position =  forward.scale(2*distance).add(camera.position);
+                plane.lookAt(flipped_position);
+            }
+        }
+    }
+ 
 }
