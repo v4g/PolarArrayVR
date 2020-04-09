@@ -173,6 +173,10 @@ export class PolarArrayGUI {
         // TODO: Render the axis handle and assign listener functions
     }
 
+    createNumberPanel() {
+        
+    }
+
     // These should notify the PolarArrayManager that point on the axis was selected
     axisModeButtonListenerL() {
         this.axisState.leftDecided = true;
