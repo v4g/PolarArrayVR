@@ -28,6 +28,7 @@ export class PolarArrayManager {
     // The GUI will send messages back to the manager
     // The manager will be in different states depending on where in the execution it is
     createPolarArray(mesh: Mesh) {
+        this.currentPolarArray = new PolarArray(mesh);
         // initialize GUI for Axis
         PolarArrayGUI.getInstance().enterAxisMode();
         
@@ -39,6 +40,7 @@ export class PolarArrayManager {
            this.currentPolarArray.axis = axis.clone();  
         }
         // TODO: Store this rendering and polar array somewhere
-        let render = new PolarArrayRender(this.currentPolarArray); 
+        let render = new PolarArrayRender(this.currentPolarArray);
+        PolarArrayGUI.getInstance().enterParamsMode();
     }
 }
