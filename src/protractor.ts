@@ -1,12 +1,12 @@
-import {Mesh, MeshBuilder, Vector3, DeepImmutable, AbstractMesh} from "@babylonjs/core";
+import {Mesh, MeshBuilder, Vector3, DeepImmutable, AbstractMesh, Matrix} from "@babylonjs/core";
 import {Helpers} from "./helpers";
 import { VRState } from "./vr-state";
 /**
  * This is a Mesh that looks like a protractor and will allow the user to select an angle
  */
 export class Protractor {
-    private readonly HEIGHT = 0.1;
-    private readonly DIAMETER = 0.5;
+    private readonly HEIGHT = 0.01;
+    private readonly DIAMETER = 0.1;
     private readonly ZERO_VEC = new Vector3(0, 0, 1);
     private callback: any;
     
@@ -36,7 +36,11 @@ export class Protractor {
      */
     setAngleFromPoint(vec: Vector3) {
         let arrow_world = vec.subtract(this.mesh.position);
-        let arrow_local = Vector3.TransformCoordinates(vec,this.mesh.getWorldMatrix());
+        console.log("Input Vector", vec);
+        let matrix = new Matrix();
+        this.mesh.getWorldMatrix().invertToRef(matrix);
+        let arrow_local = Vector3.TransformCoordinates(vec,matrix);
+        console.log("Local vector", arrow_local);
         let angle = Vector3.GetAngleBetweenVectors(this.ZERO_VEC, arrow_local, Helpers.UP);
         this.angle = angle;
         console.log("the angle is", angle);

@@ -75,15 +75,10 @@ class MyScene{
         var light1 = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);
         var light2 = new PointLight("light2", new Vector3(0, 1, -1), this.scene);
         // Add and manipulate meshes in the scene
-<<<<<<< HEAD
 
         var sphere = MeshBuilder.CreateSphere("sphere", {diameter:0.02}, this.scene);
         sphere.position.set(0, 2, 1);
         console.log("something");
-=======
-        var sphere = MeshBuilder.CreateSphere("sphere", {diameter:0.02}, this.scene);
-        sphere.position.set(0, 2, 1);
->>>>>>> 9aceb43... Renders the polar array now. Fixed some bugs
         
         this.myGround = MeshBuilder.CreateGround("myGround", { height: 15, width: 10, subdivisions: 4 }, this.scene);
         let standardMaterial = new StandardMaterial("ground_mat",this.scene);

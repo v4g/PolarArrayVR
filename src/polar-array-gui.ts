@@ -17,11 +17,8 @@ export class PolarArrayGUI {
     private static instance: PolarArrayGUI;
     private mAxisCylinder: Mesh;
     private axisState = new AxisModeState();
-<<<<<<< HEAD
     private protractor: Protractor;
-=======
     private state = PolarArrayGUI.NONE;
->>>>>>> 9aceb43... Renders the polar array now. Fixed some bugs
     private constructor() {
         let diameter = 0.05;
         this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", {height: 1, diameter});
@@ -65,6 +62,8 @@ export class PolarArrayGUI {
             VRState.getInstance().leftController.onTriggerStateChangedObservable.remove(this.axisState.lObservable);
             VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.axisState.rObservable);
             PolarArrayManager.getInstance().setAxis(this.axisState);
+            SceneState.getInstance().beforeRender.delete("gui");
+        
         }
     }
 
@@ -212,6 +211,7 @@ export class PolarArrayGUI {
     axisModeButtonListenerR(event: any) {
         if (!event.pressed)
             return;
+        console.log("R Button Pressed");
         this.axisState.rightDecided = true;
         this.axisState.rPosition = VRState.getInstance().rightController.devicePosition.clone();
         

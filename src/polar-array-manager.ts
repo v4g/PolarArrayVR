@@ -43,11 +43,8 @@ export class PolarArrayManager {
             let render = new PolarArrayRender(this.currentPolarArray);
 
         }
-<<<<<<< HEAD
         // TODO: Store this rendering and polar array somewhere
         let render = new PolarArrayRender(this.currentPolarArray);
         PolarArrayGUI.getInstance().enterParamsMode();
-=======
->>>>>>> 9aceb43... Renders the polar array now. Fixed some bugs
     }
 }
