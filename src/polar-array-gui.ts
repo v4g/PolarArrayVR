@@ -1,10 +1,12 @@
 import {VRState} from './vr-state';
-import { MeshBuilder, Mesh, Vector3} from '@babylonjs/core';
+import { MeshBuilder, Mesh, Vector3, CubeMapToSphericalPolynomialTools} from '@babylonjs/core';
 import {SceneState} from './index';
 import {Helpers} from './helpers';
 import { PolarArrayManager } from './polar-array-manager';
 import * as GUI from '@babylonjs/gui';
 import {Protractor} from './protractor';
+import { PolarArray } from './polar-array';
+import {HeightModifier} from './height-modifier';
 
 /**
  * This class will be responsible for creating all the GUIs used in creating
@@ -19,14 +21,15 @@ export class PolarArrayGUI {
     private axisState = new AxisModeState();
     private protractor: Protractor;
     private state = PolarArrayGUI.NONE;
+    private heightModifier: HeightModifier;
     private constructor() {
-        let diameter = 0.05;
+        let diameter = 0.02;
         this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", {height: 1, diameter});
         this.mAxisCylinder.setEnabled(false);
         this.mAxisCylinder.isVisible = false;
         this.protractor = new Protractor();
-        this.protractor.disable();
-        
+        this.protractor.disable(); 
+        this.heightModifier = new HeightModifier();     
     }
     static getInstance(): PolarArrayGUI {
         if (!PolarArrayGUI.instance) {
@@ -63,13 +66,15 @@ export class PolarArrayGUI {
             VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.axisState.rObservable);
             PolarArrayManager.getInstance().setAxis(this.axisState);
             SceneState.getInstance().beforeRender.delete("gui");
+            this.mAxisCylinder.setEnabled(false);
+            this.mAxisCylinder.isVisible = false;
         
         }
     }
 
     // Here you can define the rest of the parameters of the polar array, you'd have to render the protractor,
     // alongwith the number of copies input
-    enterParamsMode() {
+    enterParamsMode(polarArray: PolarArray) {
         // TODO: Render the protractor, assign listener functions for the controllers
         this.protractor.enable();
         this.protractor.setPosition(VRState.getInstance().leftController.devicePosition);
@@ -78,8 +83,13 @@ export class PolarArrayGUI {
         this.createNumberPanel();
         
         // TODO: Render the axis handle and assign listener functions
+        this.createHeightModifier(polarArray);
     }
 
+    exitParamsMode() {
+        this.protractor.disable();
+        this.heightModifier.disable();
+    }
     createNumberPanel() {
         var num1 = GUI.Button.CreateImageOnlyButton("num1", "textures/num-01.jpg");
         var num2 = GUI.Button.CreateImageOnlyButton("num1", "textures/num-02.jpg");
@@ -233,6 +243,10 @@ export class PolarArrayGUI {
         this.mAxisCylinder.setEnabled(true);
         this.mAxisCylinder.isVisible = true;
         this.mAxisCylinder.rotationQuaternion = Helpers.QuaternionFromUnitVectors(Helpers.UP, vLR);
+    }
+
+    createHeightModifier(polar: PolarArray) {
+        this.heightModifier.enable(polar);
     }
 }
 

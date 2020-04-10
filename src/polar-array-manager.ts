@@ -44,7 +44,7 @@ export class PolarArrayManager {
             this.render = new PolarArrayRender(this.currentPolarArray);
 
         }
-        PolarArrayGUI.getInstance().enterParamsMode();
+        PolarArrayGUI.getInstance().enterParamsMode(this.currentPolarArray);
     }
 
     setAngle(angle: number) {
@@ -56,5 +56,16 @@ export class PolarArrayManager {
             }
             this.render = new PolarArrayRender(this.currentPolarArray);
         }    
+    }
+
+    setHeight(height: number) {
+        if (this.currentPolarArray) {
+            this.currentPolarArray.height = height;
+            // TODO: Store this rendering and polar array somewhere
+            if (this.render) {
+                this.render.destroy();
+            }
+            this.render = new PolarArrayRender(this.currentPolarArray);
+        }        
     }
 }
