@@ -12,6 +12,7 @@ import { PolarArrayRender } from './polar-array-render';
 export class PolarArrayManager {
     private static instance: PolarArrayManager;
     private currentPolarArray!: PolarArray;
+    private render!: PolarArrayRender;
     private constructor() {
 
     }
@@ -40,11 +41,20 @@ export class PolarArrayManager {
         if (this.currentPolarArray) {
             this.currentPolarArray.calculatePointAndAxisOfRotation(axisState.lPosition, axisState.rPosition);
             // TODO: Store this rendering and polar array somewhere
-            let render = new PolarArrayRender(this.currentPolarArray);
+            this.render = new PolarArrayRender(this.currentPolarArray);
 
         }
-        // TODO: Store this rendering and polar array somewhere
-        let render = new PolarArrayRender(this.currentPolarArray);
         PolarArrayGUI.getInstance().enterParamsMode();
+    }
+
+    setAngle(angle: number) {
+        if (this.currentPolarArray) {
+            this.currentPolarArray.totalAngle = angle;
+            // TODO: Store this rendering and polar array somewhere
+            if (this.render) {
+                this.render.destroy();
+            }
+            this.render = new PolarArrayRender(this.currentPolarArray);
+        }    
     }
 }

@@ -24,4 +24,12 @@ export class PolarArrayRender {
         }
         this.polarArray = polar;
     }
+
+    destroy() {
+        this.copies.forEach(copy => {
+            copy.dispose();
+        })
+    }
+
+
 }
