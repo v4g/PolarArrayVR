@@ -18,7 +18,7 @@ export class PolarArrayRender {
         for (let i = 1; i < polar.n_copies; i++) {
             let newCopy = polar.mesh.clone();
             let angle = i * polar.totalAngle/polar.n_copies;
-            console.log(angle, polar.axis);
+            // console.log(angle, polar.axis);
             let quaternion = Quaternion.RotationAxis(polar.axis, angle);
             let newPosition = new Vector3();
             newCopy.position.rotateByQuaternionAroundPointToRef(quaternion, polar.point, newPosition);
@@ -35,6 +35,7 @@ export class PolarArrayRender {
 
     destroy() {
         this.copies.forEach(copy => {
+            SceneState.getInstance().scene.removeMesh(copy);
             copy.dispose();
         })
     }

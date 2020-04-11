@@ -1,9 +1,10 @@
-import {Mesh, MeshBuilder, DeepImmutable, Vector3} from "@babylonjs/core";
-import {PolarArray} from "./polar-array";
+import { Mesh, MeshBuilder, DeepImmutable, Vector3 } from "@babylonjs/core";
+import { PolarArray } from "./polar-array";
 import { VRState } from "./vr-state";
 import { PolarArrayManager } from "./polar-array-manager";
+import { SceneState } from ".";
 
-export class HeightModifier{ 
+export class HeightModifier {
     private heightModifier: Mesh;
 
     private HEIGHT_MODIFIER_SIZE = 0.1;
@@ -13,7 +14,7 @@ export class HeightModifier{
     private isHeld = false;
 
     constructor() {
-        this.heightModifier = MeshBuilder.CreateSphere("HeightModifier", {diameter: this.HEIGHT_MODIFIER_SIZE});  
+        this.heightModifier = MeshBuilder.CreateSphere("HeightModifier", { diameter: this.HEIGHT_MODIFIER_SIZE });
         this.disable();
         this.listener = this.rControllerCallback.bind(this);
     }
@@ -24,16 +25,38 @@ export class HeightModifier{
         this.heightModifier.setEnabled(false);
         this.isHeld = false;
         VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.listener);
+        SceneState.getInstance().beforeRender.delete("heightmodifier");
     }
     enable(polar: PolarArray) {
         let position = polar.point.add(polar.axis.scale(polar.height));
         this.heightModifier.position.copyFrom(position);
         this.heightModifier.isVisible = true;
         this.heightModifier.isPickable = true;
-        this.heightModifier.setEnabled(true);   
+        this.heightModifier.setEnabled(true);
         this.point.copyFrom(polar.point);
-        this.axis.copyFrom(polar.axis); 
+        this.axis.copyFrom(polar.axis);
         VRState.getInstance().rightController.onTriggerStateChangedObservable.add(this.listener);
+        SceneState.getInstance().beforeRender.set("heightmodifier", this.preRenderCallback.bind(this));
+    }
+    preRenderCallback() {
+        const controller = VRState.getInstance().rightController;
+        if (this.isHeld) {
+            const ray = controller.getForwardRay(5);
+            let PC = ray.origin.subtract(this.point);
+            let PCy = this.axis.scale(Vector3.Dot(this.axis, PC));
+            let PCx = PC.subtract(PCy);
+            let D = PCx.length();
+            let xAxis = PCx.normalize().scale(-1);
+            let dotProduct = (Vector3.Dot(ray.direction, xAxis));
+            if (dotProduct != 0) {
+                let d = D / dotProduct;
+                let PYZ = ray.direction.scale(d).add(PC);
+                let height = Vector3.Dot(PYZ, this.axis);
+                let newPosition = this.point.add(this.axis.scale(height));
+                this.heightModifier.position.copyFrom(newPosition);
+                PolarArrayManager.getInstance().setHeight(height);
+            }
+        }
     }
     rControllerCallback(event: any) {
         if (!event.pressed) {
@@ -43,15 +66,8 @@ export class HeightModifier{
         const controller = VRState.getInstance().rightController;
         const intersection = controller.getForwardRay(5).intersectsMesh(this.heightModifier as DeepImmutable<Mesh>);
         if (intersection.hit || this.isHeld) {
-            const ray = controller.getForwardRay(5);
-            let pToC = this.point.subtract(ray.origin);
-            let planeProjection = ray.origin.add(ray.direction.scale(Vector3.Dot(pToC, ray.direction)));
-            let planeProjectionX = planeProjection.subtract(this.point);
-            let height = Vector3.Dot(planeProjectionX, this.axis);
-            this.heightModifier.position.copyFrom(this.point.add(this.axis.scale(height)));
-            PolarArrayManager.getInstance().setHeight(height);
+            this.isHeld = true;
         }
-        this.isHeld = true;        
     }
 
 }

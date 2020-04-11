@@ -80,7 +80,7 @@ export class PolarArrayGUI {
         this.protractor.setPosition(VRState.getInstance().leftController.devicePosition);
         
         // TODO: Render the number input panel, assign listener functions
-        this.createNumberPanel();
+        // this.createNumberPanel();
         
         // TODO: Render the axis handle and assign listener functions
         this.createHeightModifier(polarArray);
