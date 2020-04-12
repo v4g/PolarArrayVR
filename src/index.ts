@@ -12,7 +12,7 @@ import "@babylonjs/core/Helpers/sceneHelpers";
 import "@babylonjs/core/Loading/Plugins/babylonFileLoader";
 
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
-import {MeshBuilder} from  "@babylonjs/core/Meshes/meshBuilder";
+import { MeshBuilder } from  "@babylonjs/core/Meshes/meshBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { TargetCamera } from "@babylonjs/core/Cameras/targetCamera";
 import { KeyboardEventTypes } from "@babylonjs/core/Events/keyboardEvents";

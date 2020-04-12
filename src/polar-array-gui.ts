@@ -161,7 +161,7 @@ export class PolarArrayGUI {
         let plane = MeshBuilder.CreatePlane("plane", { size: 3 }, SceneState.getInstance().scene);
         let advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(plane)
         advancedTexture.addControl(numPanel);     
-        plane.position = new Vector3(0,2,2)
+        plane.position = new Vector3(0,2,2);
         // plane.position = VRState.getInstance().leftController.devicePosition;
         // plane.position.y += 0.1;
         // plane.rotationQuaternion = VRState.getInstance().head.deviceRotationQuaternion;     
