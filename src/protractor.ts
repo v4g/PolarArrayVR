@@ -19,6 +19,7 @@ export class Protractor {
     private readonly UP = new Vector3(0, 1, 0);
 
     private readonly PROTRACTOR_COLOR = new Color3(0, 0, 0.5);
+    private readonly COVERING_COLOR = new Color3(0, 0, 0.3);
     private readonly TICK_COLOR = new Color3(0, 0, 0);
     private callback: any;
 
@@ -28,6 +29,8 @@ export class Protractor {
     private pointer!: Mesh;
     private isHeld = false;
     private oldPlane!: Mesh;
+    private coveringMesh!: Mesh;
+    private coveringMaterial!: StandardMaterial;
 
     constructor() {
         this.createProtractorMesh();
@@ -37,6 +40,9 @@ export class Protractor {
     set angle(radians: number) {
         if (radians < 0)
             radians = 2 * Math.PI + radians;
+        if (this._angle > 3 * Math.PI / 2 && radians < Math.PI / 2) {
+            radians = 2 * Math.PI
+        }
         this._angle = radians;
         this.setPointer();
     }
@@ -110,7 +116,7 @@ export class Protractor {
     }
 
     lookAtCamera() {
-        let CCamera = this.mesh.position.subtract(VRState.getInstance().camera.position).scale(-1);
+        let CCamera = this.mesh.position.subtract(VRState.getInstance().camera.globalPosition).scale(-1);
         const quaternion = Helpers.QuaternionFromUnitVectors(this.UP, CCamera.normalize());
         this.mesh.rotationQuaternion = quaternion;
     }
@@ -140,23 +146,36 @@ export class Protractor {
         this.ZERO_VEC.rotateByQuaternionToRef(Quaternion.RotationAxis(this.UP, this.angle), newPosition);
         newPosition.scaleInPlace(this.POINTER_POSITION);
         this.pointer.position = newPosition;
+        if (this.coveringMesh) {
+            SceneState.getInstance().scene.removeMesh(this.coveringMesh);
+            this.coveringMesh.dispose();
+        }
+        this.coveringMesh = MeshBuilder.CreateCylinder("coveringCylinder", { height: 1, diameter: 2, tessellation: 64, arc: this.angle });
+        this.coveringMesh.material = this.coveringMaterial;
+        SceneState.getInstance().scene.addMesh(this.coveringMesh);
     }
 
     createProtractorMesh() {
         this.mesh = new Mesh("Protractor");
-        this.cylinder = MeshBuilder.CreateCylinder("protractorCylinder", { height: 1, diameter: 2, tessellation: 64 });
+        this.cylinder = MeshBuilder.CreateCylinder("protractorCylinder", { height: 0.9, diameter: 2, tessellation: 64 });
         this.pointer = MeshBuilder.CreateSphere("protractorPointer", { diameter: 1 });
         this.pointer.scaling.set(this.POINTER_SCALE, this.POINTER_SCALE, this.POINTER_SCALE);
+         
         this.setPointer();
 
         let N_TICKS = 180;
         let linePoints: Vector3[] = [new Vector3(0, 0, -0.5), new Vector3(0, 0, 0.5)];
         let tick = MeshBuilder.CreateLines("protractorTickLine", { points: linePoints});
+        
         let protractor_material = new StandardMaterial("protractorMaterial", SceneState.getInstance().scene);
         protractor_material.diffuseColor = this.PROTRACTOR_COLOR;
         protractor_material.alpha = 0.1;
         this.cylinder.material = protractor_material;
 
+        this.coveringMaterial = new StandardMaterial("coveringMaterial", SceneState.getInstance().scene);
+        this.coveringMaterial.diffuseColor = this.COVERING_COLOR;
+        this.coveringMaterial.alpha = 0.2;
+        
         let ticks = new Mesh("protactorTicks");
 
         for (let i = 0; i < N_TICKS; i++) {
