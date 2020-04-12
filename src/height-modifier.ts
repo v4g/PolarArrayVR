@@ -1,4 +1,4 @@
-import { Mesh, MeshBuilder, DeepImmutable, Vector3 } from "@babylonjs/core";
+import { Mesh, MeshBuilder, DeepImmutable, Vector3, Color3, StandardMaterial } from "@babylonjs/core";
 import { PolarArray } from "./polar-array";
 import { VRState } from "./vr-state";
 import { PolarArrayManager } from "./polar-array-manager";
@@ -7,7 +7,9 @@ import { SceneState } from ".";
 export class HeightModifier {
     private heightModifier: Mesh;
 
-    private HEIGHT_MODIFIER_SIZE = 0.1;
+    private HEIGHT_MODIFIER_SIZE = 0.08;
+    private readonly MESH_COLOR = new Color3(1, 0.75, 0);
+    private readonly MESH_ALPHA = 0.5;
     private listener: any;
     private point = new Vector3();
     private axis = new Vector3();
@@ -15,6 +17,11 @@ export class HeightModifier {
 
     constructor() {
         this.heightModifier = MeshBuilder.CreateSphere("HeightModifier", { diameter: this.HEIGHT_MODIFIER_SIZE });
+        let material = new StandardMaterial("heightMaterial", SceneState.getInstance().scene);
+        material.diffuseColor = this.MESH_COLOR;
+        material.alpha = this.MESH_ALPHA;
+        this.heightModifier.material = material;
+        
         this.disable();
         this.listener = this.rControllerCallback.bind(this);
     }

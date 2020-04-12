@@ -1,5 +1,5 @@
 import {VRState} from './vr-state';
-import { MeshBuilder, Mesh, Vector3, CubeMapToSphericalPolynomialTools} from '@babylonjs/core';
+import { MeshBuilder, Mesh, Vector3, CubeMapToSphericalPolynomialTools, StandardMaterial, Color3} from '@babylonjs/core';
 import {SceneState} from './index';
 import {Helpers} from './helpers';
 import { PolarArrayManager } from './polar-array-manager';
@@ -15,6 +15,9 @@ import {HeightModifier} from './height-modifier';
 export class PolarArrayGUI {
     static readonly NONE = 0;
     static readonly AXIS_MODE = 1;
+    private readonly AXIS_COLOR = new Color3(0.7, 0, 0);
+    private readonly AXIS_OPACITY = 0.3;
+
 
     private static instance: PolarArrayGUI;
     private mAxisCylinder: Mesh;
@@ -27,6 +30,11 @@ export class PolarArrayGUI {
         this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", {height: 1, diameter});
         this.mAxisCylinder.setEnabled(false);
         this.mAxisCylinder.isVisible = false;
+        let axisMaterial = new StandardMaterial("axisMaterial", SceneState.getInstance().scene);
+        axisMaterial.diffuseColor = this.AXIS_COLOR;
+        axisMaterial.alpha = this.AXIS_OPACITY;
+        this.mAxisCylinder.material = axisMaterial;
+        
         this.protractor = new Protractor();
         this.protractor.disable(); 
         this.heightModifier = new HeightModifier();     

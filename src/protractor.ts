@@ -35,6 +35,8 @@ export class Protractor {
     }
 
     set angle(radians: number) {
+        if (radians < 0)
+            radians = 2 * Math.PI + radians;
         this._angle = radians;
         this.setPointer();
     }
