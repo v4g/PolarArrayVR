@@ -95,8 +95,8 @@ class MyScene{
         sceneState.scene = this.scene;
         this.scene.registerBeforeRender(()=>{
             this.beforeRender();            
-        });
-        
+        })
+        this.vrState.camera = webVr.webVRCamera;
         webVr.webVRCamera.onControllersAttachedObservable.add(()=>{
             this.vrState.valid = true;
             if (webVr.webVRCamera.leftController != null){

@@ -1,5 +1,5 @@
-import {Mesh, MeshBuilder, Vector3, DeepImmutable, AbstractMesh, Matrix, Quaternion, Material, StandardMaterial} from "@babylonjs/core";
-import {Helpers} from "./helpers";
+import { Mesh, MeshBuilder, Vector3, DeepImmutable, AbstractMesh, Matrix, Quaternion, Material, StandardMaterial, Color4, Color3, Plane } from "@babylonjs/core";
+import { Helpers } from "./helpers";
 import { VRState } from "./vr-state";
 import { SceneState } from ".";
 import { PolarArrayManager } from "./polar-array-manager";
@@ -9,16 +9,26 @@ import { PolarArrayManager } from "./polar-array-manager";
 export class Protractor {
     private readonly HEIGHT = 0.01;
     private readonly DIAMETER = 0.1;
-    private readonly TICK_LENGTH = 0.1 * this.DIAMETER;
-    private readonly BIG_TICK_LENGTH = 0.2 * this.DIAMETER;
+    private readonly TICK_LENGTH = 0.1;
+    private readonly BIG_TICK_LENGTH = 0.2;
+    private readonly SMALL_TICK_LENGTH = 0.06;
     private readonly ZERO_VEC = new Vector3(0, 0, 1);
-    private readonly ZERO_TICK_POSITION = this.ZERO_VEC.clone().scaleInPlace(0.9);
+    private readonly ZERO_TICK_POSITION = this.ZERO_VEC.clone().scaleInPlace(0.9).addInPlace(new Vector3(0, 0.6, 0));
+    private readonly POINTER_POSITION = 1.1;
+    private readonly POINTER_SCALE = 0.2;
+    private readonly UP = new Vector3(0, 1, 0);
 
+    private readonly PROTRACTOR_COLOR = new Color3(0, 0, 0.5);
+    private readonly TICK_COLOR = new Color3(0, 0, 0);
     private callback: any;
-    
+
     private _angle = 0;
     private mesh!: Mesh;
-    
+    private cylinder!: Mesh;
+    private pointer!: Mesh;
+    private isHeld = false;
+    private oldPlane!: Mesh;
+
     constructor() {
         this.createProtractorMesh();
         this.callback = this.inputListener.bind(this);
@@ -26,6 +36,7 @@ export class Protractor {
 
     set angle(radians: number) {
         this._angle = radians;
+        this.setPointer();
     }
 
     get angle(): number {
@@ -44,7 +55,7 @@ export class Protractor {
         console.log("Input Vector", vec);
         let matrix = new Matrix();
         this.mesh.getWorldMatrix().invertToRef(matrix);
-        let arrow_local = Vector3.TransformCoordinates(vec,matrix);
+        let arrow_local = Vector3.TransformCoordinates(vec, matrix);
         console.log("Local vector", arrow_local);
         let angle = Vector3.GetAngleBetweenVectors(this.ZERO_VEC, arrow_local, Helpers.UP);
         this.angle = angle;
@@ -56,12 +67,50 @@ export class Protractor {
         this.mesh.isVisible = true;
         this.mesh.setEnabled(true);
         VRState.getInstance().rightController.onTriggerStateChangedObservable.add(this.callback);
+        SceneState.getInstance().beforeRender.set("Protractor", this.beforeRender.bind(this));
     }
     disable() {
         this.mesh.isPickable = false;
         this.mesh.isVisible = false;
         this.mesh.setEnabled(false);
         VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.callback);
+        SceneState.getInstance().beforeRender.delete("Protractor");
+        this.isHeld = false;
+    }
+
+    beforeRender() {
+        const controller = VRState.getInstance().leftController;
+        let newPosition = controller.devicePosition.clone();
+        newPosition.subtractInPlace(controller.getForwardRay(1).direction.scale(0.01));
+        let up = new Vector3(0, 1, 0);
+        if (controller.mesh?.getWorldMatrix())
+            up = Vector3.TransformNormal(new Vector3(0, 1, 0), controller.mesh?.getWorldMatrix());
+        newPosition.addInPlace(up.scale(0.2));
+        this.mesh.position = newPosition;
+        this.lookAtCamera();
+
+        if (this.isHeld) {
+            let normal = new Vector3(0, 1, 0);
+            if (this.mesh.rotationQuaternion)
+                this.UP.rotateByQuaternionToRef(this.mesh.rotationQuaternion, normal);
+            let d = Vector3.Dot(this.mesh.position, normal);
+            console.log(normal, d);
+            let plane = new Plane(normal.x, normal.y, normal.z, -d);
+            const ray = VRState.getInstance().rightController.getForwardRay(10);
+            let distance = ray.intersectsPlane(plane);
+            if (distance) {
+                let intersectionPoint = ray.origin.add(ray.direction.scale(distance));
+                console.log(distance);
+                this.setAngleFromPoint(intersectionPoint);                
+                PolarArrayManager.getInstance().setAngle(this.angle);
+            }
+        }
+    }
+
+    lookAtCamera() {
+        let CCamera = this.mesh.position.subtract(VRState.getInstance().camera.position).scale(-1);
+        const quaternion = Helpers.QuaternionFromUnitVectors(this.UP, CCamera.normalize());
+        this.mesh.rotationQuaternion = quaternion;
     }
 
     /**
@@ -71,35 +120,53 @@ export class Protractor {
      */
     inputListener(event: any) {
         const mesh = this.mesh;
-        if (!event.pressed)
+        if (!event.pressed) {
+            this.isHeld = false;
             return;
-        const intersection = VRState.getInstance().rightController.getForwardRay(5).intersectsMesh(mesh as DeepImmutable<AbstractMesh>);
+        }
+        const intersection = VRState.getInstance().rightController.getForwardRay(5).intersectsMesh(this.pointer as DeepImmutable<AbstractMesh>);
         if (intersection.hit) {
             console.log("Protractor was hit");
-            this.setAngleFromPoint(intersection.pickedPoint as Vector3);
-            PolarArrayManager.getInstance().setAngle(this.angle);
+            this.isHeld = true;
         } else {
             console.log("Protractor was not hit");
         }
     }
 
+    setPointer() {
+        let newPosition = new Vector3();
+        this.ZERO_VEC.rotateByQuaternionToRef(Quaternion.RotationAxis(this.UP, this.angle), newPosition);
+        newPosition.scaleInPlace(this.POINTER_POSITION);
+        this.pointer.position = newPosition;
+    }
+
     createProtractorMesh() {
         this.mesh = new Mesh("Protractor");
-        let cylinder = MeshBuilder.CreateCylinder("protractorCylinder", {height: 1, diameter: 2});
-        
+        this.cylinder = MeshBuilder.CreateCylinder("protractorCylinder", { height: 1, diameter: 2, tessellation: 64 });
+        this.pointer = MeshBuilder.CreateSphere("protractorPointer", { diameter: 1 });
+        this.pointer.scaling.set(this.POINTER_SCALE, this.POINTER_SCALE, this.POINTER_SCALE);
+        this.setPointer();
+
         let N_TICKS = 180;
         let linePoints: Vector3[] = [new Vector3(0, 0, -0.5), new Vector3(0, 0, 0.5)];
-        let tick = MeshBuilder.CreateLines("protractorTickLine", {points: linePoints});
-        let tick_material = new StandardMaterial("tickMaterial", SceneState.getInstance().scene);
-        tick_material.diffuseColor.set(1, 1, 1) ;
-        tick.material = tick_material;
+        let tick = MeshBuilder.CreateLines("protractorTickLine", { points: linePoints});
+        let protractor_material = new StandardMaterial("protractorMaterial", SceneState.getInstance().scene);
+        protractor_material.diffuseColor = this.PROTRACTOR_COLOR;
+        protractor_material.alpha = 0.1;
+        this.cylinder.material = protractor_material;
 
         let ticks = new Mesh("protactorTicks");
- 
-        for (let i = 0 ; i < N_TICKS; i++) {
-            let newTick = tick.clone("protractorTick"+i);
-            newTick.scaling.set(1, 1, this.TICK_LENGTH);
-            
+
+        for (let i = 0; i < N_TICKS; i++) {
+            let newTick = tick.clone("protractorTick" + i);
+            newTick.color = this.TICK_COLOR
+            if (i % 10 == 0) {
+                newTick.scaling.set(1, 1, this.BIG_TICK_LENGTH);
+            } else if (i % 5 == 0)
+                newTick.scaling.set(1, 1, this.TICK_LENGTH);
+            else
+                newTick.scaling.set(1, 1, this.SMALL_TICK_LENGTH);
+
             let rotation = Quaternion.RotationAxis(new Vector3(0, 1, 0), i * Math.PI * 2 / N_TICKS);
             newTick.rotate(new Vector3(0, 1, 0), i * Math.PI * 2 / N_TICKS);
 
@@ -110,10 +177,11 @@ export class Protractor {
             newTick.isPickable = false;
             ticks.addChild(newTick);
         }
-        this.mesh.addChild(cylinder);
+        this.mesh.addChild(this.cylinder);
         this.mesh.addChild(ticks);
-        
+        this.mesh.addChild(this.pointer);
+    
         this.mesh.scaling.set(this.DIAMETER, this.HEIGHT, this.DIAMETER);
-        SceneState.getInstance().scene.addMesh(this.mesh);              
+        SceneState.getInstance().scene.addMesh(this.mesh);
     }
 }
