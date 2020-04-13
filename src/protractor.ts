@@ -1,4 +1,4 @@
-import { Mesh, MeshBuilder, Vector3, DeepImmutable, AbstractMesh, Matrix, Quaternion, Material, StandardMaterial, Color4, Color3, Plane } from "@babylonjs/core";
+import { Mesh, MeshBuilder, Vector3, DeepImmutable, AbstractMesh, Matrix, Quaternion, Material, StandardMaterial, Color4, Color3, Plane, VertexBuffer, FloatArray } from "@babylonjs/core";
 import { Helpers } from "./helpers";
 import { VRState } from "./vr-state";
 import { SceneState } from ".";
@@ -41,7 +41,10 @@ export class Protractor implements Tool {
         if (radians < 0)
             radians = 2 * Math.PI + radians;
         if (this._angle > 3 * Math.PI / 2 && radians < Math.PI / 2) {
-            radians = 2 * Math.PI
+            radians = 2 * Math.PI;
+        }
+        if (this._angle < Math.PI / 4 && radians > Math.PI / 2) {
+            radians = 0;
         }
         this._angle = radians;
         this.setPointer();
@@ -111,7 +114,7 @@ export class Protractor implements Tool {
             if (distance) {
                 let intersectionPoint = ray.origin.add(ray.direction.scale(distance));
                 console.log(distance);
-                this.setAngleFromPoint(intersectionPoint);                
+                this.setAngleFromPoint(intersectionPoint);
                 PolarArrayManager.getInstance().setAngle(this.angle);
             }
         }
@@ -143,12 +146,16 @@ export class Protractor implements Tool {
         newPosition.scaleInPlace(this.POINTER_POSITION);
         this.pointer.position = newPosition;
         if (this.coveringMesh) {
-            SceneState.getInstance().scene.removeMesh(this.coveringMesh);
+            this.mesh.removeChild(this.coveringMesh);
             this.coveringMesh.dispose();
         }
-        this.coveringMesh = MeshBuilder.CreateCylinder("coveringCylinder", { height: 1, diameter: 2, tessellation: 64, arc: this.angle });
+        this.coveringMesh = MeshBuilder.CreateCylinder("coveringCylinder", { updatable: true, height: 1, diameter: 2, tessellation: 64, arc: this.angle / (Math.PI * 2) });
+        this.mesh.addChild(this.coveringMesh);
+        this.coveringMesh.position.set(0, 0, 0);
+        this.coveringMesh.scaling.set(1, 1, 1);
+        this.coveringMesh.rotation.set(0, 0 ,0);
+        this.coveringMesh.rotate(this.UP, Vector3.GetAngleBetweenVectors(this.ZERO_VEC, new Vector3(-1, 0, 0), this.UP));
         this.coveringMesh.material = this.coveringMaterial;
-        SceneState.getInstance().scene.addMesh(this.coveringMesh);
     }
 
     createProtractorMesh() {
@@ -156,22 +163,25 @@ export class Protractor implements Tool {
         this.cylinder = MeshBuilder.CreateCylinder("protractorCylinder", { height: 0.9, diameter: 2, tessellation: 64 });
         this.pointer = MeshBuilder.CreateSphere("protractorPointer", { diameter: 1 });
         this.pointer.scaling.set(this.POINTER_SCALE, this.POINTER_SCALE, this.POINTER_SCALE);
-         
+
+        this.coveringMaterial = new StandardMaterial("coveringMaterial", SceneState.getInstance().scene);
+        this.coveringMaterial.diffuseColor = this.COVERING_COLOR;
+        this.coveringMaterial.alpha = 0.2;
+
         this.setPointer();
+
+        this.coveringMesh.material = this.coveringMaterial;
 
         let N_TICKS = 180;
         let linePoints: Vector3[] = [new Vector3(0, 0, -0.5), new Vector3(0, 0, 0.5)];
-        let tick = MeshBuilder.CreateLines("protractorTickLine", { points: linePoints});
-        
+        let tick = MeshBuilder.CreateLines("protractorTickLine", { points: linePoints });
+
         let protractor_material = new StandardMaterial("protractorMaterial", SceneState.getInstance().scene);
         protractor_material.diffuseColor = this.PROTRACTOR_COLOR;
         protractor_material.alpha = 0.1;
         this.cylinder.material = protractor_material;
 
-        this.coveringMaterial = new StandardMaterial("coveringMaterial", SceneState.getInstance().scene);
-        this.coveringMaterial.diffuseColor = this.COVERING_COLOR;
-        this.coveringMaterial.alpha = 0.2;
-        
+
         let ticks = new Mesh("protactorTicks");
 
         for (let i = 0; i < N_TICKS; i++) {
@@ -197,8 +207,8 @@ export class Protractor implements Tool {
         this.mesh.addChild(this.cylinder);
         this.mesh.addChild(ticks);
         this.mesh.addChild(this.pointer);
-    
         this.mesh.scaling.set(this.DIAMETER, this.HEIGHT, this.DIAMETER);
+
         SceneState.getInstance().scene.addMesh(this.mesh);
     }
 }
