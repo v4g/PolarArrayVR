@@ -7,6 +7,7 @@ import * as GUI from '@babylonjs/gui';
 import {Protractor} from './protractor';
 import { PolarArray } from './polar-array';
 import {HeightModifier} from './height-modifier';
+import {MainPanel, Panel} from './panel';
 
 /**
  * This class will be responsible for creating all the GUIs used in creating
@@ -25,6 +26,7 @@ export class PolarArrayGUI {
     private protractor: Protractor;
     private state = PolarArrayGUI.NONE;
     private heightModifier: HeightModifier;
+    // private mainPanel: MainPanel;
     private constructor() {
         let diameter = 0.02;
         this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", {height: 1, diameter});
@@ -37,7 +39,9 @@ export class PolarArrayGUI {
         
         this.protractor = new Protractor();
         this.protractor.disable(); 
-        this.heightModifier = new HeightModifier();     
+        this.heightModifier = new HeightModifier();
+        // this.mainPanel = new MainPanel();
+        // this.createPanel();
     }
     static getInstance(): PolarArrayGUI {
         if (!PolarArrayGUI.instance) {
@@ -45,6 +49,16 @@ export class PolarArrayGUI {
         }
         return PolarArrayGUI.instance;
     }
+    /**
+     * The panel will contain all the UI tools. It is readjustable so that you can pick it up and
+     * move it in the plane. It will contain 3 rectangles, one for each parameter. Clicking on these
+     * panels will open the corresponding UI. One rectangle to Exit
+     */
+    // private createPanel() {
+    //     this.mainPanel.addPanel(this.protractor);
+    //     this.mainPanel.addPanel(this.heightModifier);
+    //     this.mainPanel.disable();
+    // }
 
     // Here you can define the axis of the polar array
     enterAxisMode(){
@@ -83,6 +97,9 @@ export class PolarArrayGUI {
     // Here you can define the rest of the parameters of the polar array, you'd have to render the protractor,
     // alongwith the number of copies input
     enterParamsMode(polarArray: PolarArray) {
+        // this.mainPanel.polar = polarArray;
+        // this.mainPanel.enable();
+        // this.mainPanel.setPosition(VRState.getInstance().leftController.devicePosition);
         // TODO: Render the protractor, assign listener functions for the controllers
         this.protractor.enable();
         this.protractor.setPosition(VRState.getInstance().leftController.devicePosition);
@@ -95,6 +112,7 @@ export class PolarArrayGUI {
     }
 
     exitParamsMode() {
+        // this.mainPanel.disable();
         this.protractor.disable();
         this.heightModifier.disable();
     }
@@ -219,26 +237,24 @@ export class PolarArrayGUI {
         this.axisState.leftDecided = true;
         this.axisState.lPosition = VRState.getInstance().leftController.devicePosition.clone();
         console.log("L Button was Pressed");
-        if (this.axisState.rightDecided) {
-            this.exitAxisMode();
-        }
+        
     }
     axisModeButtonListenerR(event: any) {
         if (!event.pressed)
             return;
         console.log("R Button Pressed");
         this.axisState.rightDecided = true;
-        this.axisState.rPosition = VRState.getInstance().rightController.devicePosition.clone();
+        this.axisState.rPosition = VRState.getInstance().rightController.devicePosition.clone();       
         
-        if (this.axisState.leftDecided) {
-            this.exitAxisMode();
-        }
     }
     // This function is called before the render function
     // Use it to decide what to do for the axis mode
     // When in axis mode, get the two endpoints of the controller and render a line
     axisModeBeforeRender() {
         this.renderAxisCylinder();
+        if (this.axisState.rightDecided && this.axisState.leftDecided) {
+            this.exitAxisMode();
+        }
     }
 
     renderAxisCylinder() {
@@ -256,6 +272,8 @@ export class PolarArrayGUI {
     createHeightModifier(polar: PolarArray) {
         this.heightModifier.enable(polar);
     }
+
+    
 }
 
 export class AxisModeState {

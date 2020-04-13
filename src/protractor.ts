@@ -2,11 +2,12 @@ import { Mesh, MeshBuilder, Vector3, DeepImmutable, AbstractMesh, Matrix, Quater
 import { Helpers } from "./helpers";
 import { VRState } from "./vr-state";
 import { SceneState } from ".";
+import { Tool } from "./tool";
 import { PolarArrayManager } from "./polar-array-manager";
 /**
  * This is a Mesh that looks like a protractor and will allow the user to select an angle
  */
-export class Protractor {
+export class Protractor implements Tool {
     private readonly HEIGHT = 0.01;
     private readonly DIAMETER = 0.1;
     private readonly TICK_LENGTH = 0.1;
@@ -28,7 +29,6 @@ export class Protractor {
     private cylinder!: Mesh;
     private pointer!: Mesh;
     private isHeld = false;
-    private oldPlane!: Mesh;
     private coveringMesh!: Mesh;
     private coveringMaterial!: StandardMaterial;
 
@@ -71,6 +71,8 @@ export class Protractor {
     }
 
     enable() {
+        console.log("Protractor was Enabled");
+        console.trace();
         this.mesh.isPickable = true;
         this.mesh.isVisible = true;
         this.mesh.setEnabled(true);
@@ -95,7 +97,7 @@ export class Protractor {
             up = Vector3.TransformNormal(new Vector3(0, 1, 0), controller.mesh?.getWorldMatrix());
         newPosition.addInPlace(up.scale(0.2));
         this.mesh.position = newPosition;
-        this.lookAtCamera();
+        Helpers.lookAtCamera(VRState.getInstance().camera, this.mesh);
 
         if (this.isHeld) {
             let normal = new Vector3(0, 1, 0);
@@ -113,12 +115,6 @@ export class Protractor {
                 PolarArrayManager.getInstance().setAngle(this.angle);
             }
         }
-    }
-
-    lookAtCamera() {
-        let CCamera = this.mesh.position.subtract(VRState.getInstance().camera.globalPosition).scale(-1);
-        const quaternion = Helpers.QuaternionFromUnitVectors(this.UP, CCamera.normalize());
-        this.mesh.rotationQuaternion = quaternion;
     }
 
     /**

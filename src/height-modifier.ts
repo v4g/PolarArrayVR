@@ -3,8 +3,9 @@ import { PolarArray } from "./polar-array";
 import { VRState } from "./vr-state";
 import { PolarArrayManager } from "./polar-array-manager";
 import { SceneState } from ".";
+import { Tool } from "./tool";
 
-export class HeightModifier {
+export class HeightModifier implements Tool {
     private heightModifier: Mesh;
 
     private HEIGHT_MODIFIER_SIZE = 0.08;

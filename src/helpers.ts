@@ -7,12 +7,18 @@ export class Helpers {
         let angle = Vector3.GetAngleBetweenVectors(v1, v2, axis);
         return Quaternion.RotationAxis(axis, angle);
     }
-    static lookAtCamera(camera: Camera, plane: Mesh) {
+    static lookAtCamera(camera: Camera, plane: Mesh, up?: Vector3) {
         let distance = 5;
         if (camera instanceof WebVRFreeCamera) {
-            let CCamera = plane.position.subtract(camera.globalPosition).scale(-1);
-            const quaternion = Helpers.QuaternionFromUnitVectors(this.UP, CCamera.normalize());
-            plane.rotationQuaternion = quaternion;
+            if (camera.rawPose) {
+                const vec = camera.devicePosition;
+                let CCamera = plane.position.subtract(vec).scale(-1);
+                if (!up) {
+                    up = this.UP;
+                } 
+                const quaternion = Helpers.QuaternionFromUnitVectors(up, CCamera.normalize());
+                plane.rotationQuaternion = quaternion;
+            }
         }
         else {
             camera = (camera as TargetCamera);
