@@ -1,4 +1,5 @@
 import {WebVRController, WebVRFreeCamera, Camera, Vector3} from "@babylonjs/core";
+import { SceneState } from ".";
 export class VRState {
     valid = false;
     private _leftController!: WebVRController;
@@ -12,7 +13,7 @@ export class VRState {
     private btnStateL = false;
     private btnStateR = false;
     private static instance: VRState;
-    
+    private zoomTrigger = new SecondaryTriggerState();
     private constructor() {
 
     }
@@ -22,7 +23,6 @@ export class VRState {
             VRState.instance = new VRState();
         }
         return VRState.instance;
-        
     }
 
     saveState() {
@@ -42,7 +42,13 @@ export class VRState {
             } else if (this.lastStateL == false) {
                 this.eventValidL = true;
             }
-        })
+        });
+        left.onButtonStateChange((controlledIndex, index, state) => {
+            if (index == 2) {
+                this.secondaryTriggerL(state);
+            }
+        });
+        SceneState.getInstance().beforeRender.set("VRState", this.beforeRender.bind(this));
     }
 
     get leftController(): WebVRController {
@@ -60,10 +66,49 @@ export class VRState {
                 this.eventValidR = true;
             }
         })
+        right.onButtonStateChange((controlledIndex, index, state) => {
+            if (index == 2) {
+                this.secondaryTriggerR(state);
+            }
+        });
     }
 
     get rightController(): WebVRController {
         return this._rightController;
+    }
+
+    secondaryTriggerL(event: any) {
+        if (event.pressed) {
+            this.zoomTrigger.isSecondaryTriggerHeldL = true;
+            if (this.zoomTrigger.isSecondaryTriggerHeldR && !this.zoomTrigger.isZooming) {
+                this.zoomTrigger.isZooming = true;
+                this.zoomTrigger.zoomVector = this.leftController.devicePosition.subtract(this.rightController.devicePosition);
+            }
+        } else {
+            this.zoomTrigger.isSecondaryTriggerHeldL = false;
+            this.zoomTrigger.isZooming = false;
+        }
+    }
+    secondaryTriggerR(event: any) {
+        if (event.pressed) {
+            this.zoomTrigger.isSecondaryTriggerHeldR = true;
+            if (this.zoomTrigger.isSecondaryTriggerHeldL && !this.zoomTrigger.isZooming) {
+                this.zoomTrigger.isZooming = true;
+                this.zoomTrigger.zoomVector = this.leftController.devicePosition.subtract(this.rightController.devicePosition);
+            }
+        } else {
+            this.zoomTrigger.isZooming = false;
+            this.zoomTrigger.isSecondaryTriggerHeldR = false;
+        }
+    }
+
+    beforeRender() {
+        if (this.zoomTrigger.isZooming) {
+            const vec = this.leftController.devicePosition.subtract(this.rightController.devicePosition);
+            const zoom = vec.length() - this.zoomTrigger.zoomVector.length();
+            const ray = (this.camera as WebVRFreeCamera).getForwardRay(1);
+            (this.camera as WebVRFreeCamera).position.addInPlace(ray.direction.scale(zoom));   
+        }
     }
 
     isControllerTwisted() {
@@ -89,3 +134,10 @@ export class VRState {
         }
     }
 };
+
+class SecondaryTriggerState {
+    isSecondaryTriggerHeldL = false;
+    isSecondaryTriggerHeldR = false;
+    isZooming = false;
+    zoomVector = new Vector3();
+}
