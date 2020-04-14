@@ -37,7 +37,7 @@ export class HeightModifier implements Tool {
         this.heightModifier.setEnabled(false);
         this.isHeld = false;
         VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.listener);
-        VRState.getInstance().leftController.onPadValuesChangedObservable.remove(this.padCallback);
+        VRState.getInstance().rightController.onPadValuesChangedObservable.remove(this.padCallback);
         SceneState.getInstance().beforeRender.delete("heightmodifier");
     }
     enable(polar: PolarArray) {

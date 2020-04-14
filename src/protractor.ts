@@ -66,14 +66,11 @@ export class Protractor implements Tool {
      * @param vec point on the mesh in world co-ordinates
      */
     setAngleFromPoint(vec: Vector3) {
-        console.log("Input Vector", vec);
         let matrix = new Matrix();
         this.mesh.getWorldMatrix().invertToRef(matrix);
         let arrow_local = Vector3.TransformCoordinates(vec, matrix);
-        console.log("Local vector", arrow_local);
         let angle = Vector3.GetAngleBetweenVectors(this.ZERO_VEC, arrow_local, Helpers.UP);
         this.angle = angle;
-        console.log("the angle is", angle);
     }
 
     enable() {
@@ -112,13 +109,11 @@ export class Protractor implements Tool {
             if (this.mesh.rotationQuaternion)
                 this.UP.rotateByQuaternionToRef(this.mesh.rotationQuaternion, normal);
             let d = Vector3.Dot(this.mesh.position, normal);
-            console.log(normal, d);
             let plane = new Plane(normal.x, normal.y, normal.z, -d);
             const ray = VRState.getInstance().rightController.getForwardRay(10);
             let distance = ray.intersectsPlane(plane);
             if (distance) {
                 let intersectionPoint = ray.origin.add(ray.direction.scale(distance));
-                console.log(distance);
                 this.setAngleFromPoint(intersectionPoint);
                 PolarArrayManager.getInstance().setAngle(this.angle);
             }
@@ -151,7 +146,6 @@ export class Protractor implements Tool {
 
     padListener(event: any) {
         const vec = new Vector3(event.x, event.y, 0);
-        console.log("Length of vector", vec.length());
         if (vec.length() > 0.5) {
             const theta = Math.atan2(vec.y, vec.x);
             this.angle = theta;

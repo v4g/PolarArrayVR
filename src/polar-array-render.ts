@@ -18,13 +18,11 @@ export class PolarArrayRender {
     AXIS_HEIGHT = 5;
     ribbon!: Mesh;
     constructor(polar: PolarArray) {
-        console.log("Creating copies");
         const scaleVector = polar.axis.scale(polar.height);
         for (let i = 1; i < polar.n_copies; i++) {
             for (let j = 0; j < polar.meshes.length; j++) {
                 let newCopy = polar.meshes[j].clone();
                 let angle = i * polar.totalAngle / polar.n_copies;
-                // console.log(angle, polar.axis);
                 let quaternion = Quaternion.RotationAxis(polar.axis, angle);
                 let newPosition = new Vector3();
                 newCopy.position.rotateByQuaternionAroundPointToRef(quaternion, polar.point, newPosition);
@@ -62,14 +60,8 @@ export class PolarArrayRender {
                 if (newCopy.rotationQuaternion)
                     newCopy.rotationQuaternion = null;
                 newCopy.rotation.copyFrom(polar.meshes[j].rotation);
-                console.log(polar.meshes[j].rotationQuaternion);
                 if (polar.meshes[j].rotationQuaternion) {
-                    console.log("Old Quaternion");
-                    console.log(polar.meshes[j].rotationQuaternion?.x, polar.meshes[j].rotationQuaternion?.y, polar.meshes[j].rotationQuaternion?.z);
                     newCopy.rotationQuaternion = (polar.meshes[j].rotationQuaternion as Quaternion).clone();
-                }
-                if (j == 0) {
-                    // console.log(newCopy.rotation.x, newCopy.rotation.y, newCopy.rotation.z, angle);
                 }
                 newCopy.rotate(polar.axis, angle, Space.WORLD);
 
@@ -88,8 +80,8 @@ export class PolarArrayRender {
             let controlPoints = [];
             for (let j = 0; j < polar.meshes.length; j++) {
                 let cp = [];
+                cp.push(polar.meshes[j].position.clone());
                 for (let i = 1; i < polar.n_copies; i++) {
-                    console.log((i - 1) * polar.meshes.length + j);
                     const copy = this.copies[(i - 1) * polar.meshes.length + j];
                     cp.push(copy.position.clone());
                 }
@@ -104,6 +96,7 @@ export class PolarArrayRender {
     }
 
     destroy() {
+        console.log("Destroying this");
         this.copies.forEach(copy => {
             SceneState.getInstance().scene.removeMesh(copy);
             copy.dispose();
