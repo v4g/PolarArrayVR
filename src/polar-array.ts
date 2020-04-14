@@ -5,13 +5,13 @@ export class PolarArray {
     n_copies: number; // the number of copies of the object to be placed in the scene
     axis: Vector3; //TODO: this should be an axis object replace this
     height: number; // height on the axis the array will extend to
-    mesh: Mesh; // The mesh being copied
+    meshes: Mesh[]; // The mesh being copied
     point: Vector3; // The point around which rotation happens
-    constructor(mesh: Mesh) {
+    constructor(meshes: Mesh[]) {
         this.totalAngle = 2 * Math.PI;
         this.n_copies = 12;
         this.height = 0;
-        this.mesh = mesh;
+        this.meshes = meshes;
         this.axis = new Vector3();
         this.point = new Vector3();
     }
@@ -21,7 +21,7 @@ export class PolarArray {
         // Vector from rPosition to mesh center, project that on the axis and
         // then add this projection to the rPosition
         this.axis = rPoint.subtract(lPoint);
-        let rToMesh = this.mesh.position.subtract(rPoint);
+        let rToMesh = this.meshes[0].position.subtract(rPoint);
         let projection = Vector3.Dot(rToMesh, this.axis.normalize());
         this.point = rPoint.add(this.axis.scale(projection));  
     }

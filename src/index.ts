@@ -41,6 +41,7 @@ class Playground {
 export class SceneState {
     scene!: Scene;
     private static instance: SceneState;
+    allMeshes: Mesh[] = []
     beforeRender: Map<string,{ ( ) : void }>  = new Map<string, { ( ) : void }>();
     private constructor() {
 
@@ -93,6 +94,7 @@ class MyScene{
         this.vrState = VRState.getInstance();
         let sceneState = SceneState.getInstance();
         sceneState.scene = this.scene;
+        sceneState.allMeshes.push(sphere);
         this.scene.registerBeforeRender(()=>{
             this.beforeRender();            
         })
@@ -111,7 +113,7 @@ class MyScene{
             });            
             }
             let pam = PolarArrayManager.getInstance(); 
-            pam.createPolarArray(sphere);
+            pam.selectMeshes();
            
         });
     }

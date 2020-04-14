@@ -1,10 +1,16 @@
 import {WebVRController, WebVRFreeCamera, Camera, Vector3} from "@babylonjs/core";
 export class VRState {
     valid = false;
-    leftController!: WebVRController;
-    rightController!: WebVRController;
+    private _leftController!: WebVRController;
+    private _rightController!: WebVRController;
     camera!: Camera;
     head!: WebVRFreeCamera;
+    eventValidL = true;
+    eventValidR = true;
+    lastStateL = false;
+    lastStateR = false;
+    private btnStateL = false;
+    private btnStateR = false;
     private static instance: VRState;
     
     private constructor() {
@@ -16,6 +22,48 @@ export class VRState {
             VRState.instance = new VRState();
         }
         return VRState.instance;
+        
+    }
+
+    saveState() {
+        this.lastStateL = this.btnStateL;
+        this.lastStateR = this.btnStateR;
+        this.eventValidL = false;
+        this.eventValidR = false;
+    }
+    set leftController(left: WebVRController) {
+        this._leftController = left;
+        left.onTriggerStateChangedObservable.add((event)=> {
+            this.btnStateL = event.pressed;
+            // lastStateL contains the state when the UI mode was changing
+            // If that was true and the button is now unpresssed, its valid
+            if (this.lastStateL == true && !event.pressed && !this.eventValidL) {
+                this.eventValidL = true;
+            } else if (this.lastStateL == false) {
+                this.eventValidL = true;
+            }
+        })
+    }
+
+    get leftController(): WebVRController {
+        return this._leftController;
+    }
+    set rightController(right: WebVRController) {
+        this._rightController = right;
+        right.onTriggerStateChangedObservable.add((event)=> {
+            this.btnStateR = event.pressed;
+            // lastStateL contains the state when the UI mode was changing
+            // If that was true and the button is now unpresssed, its valid
+            if (this.lastStateR == true && !event.pressed && !this.eventValidR) {
+                this.eventValidR = true;
+            } else if (this.lastStateR == false) {
+                this.eventValidR = true;
+            }
+        })
+    }
+
+    get rightController(): WebVRController {
+        return this._rightController;
     }
 
     isControllerTwisted() {

@@ -9,7 +9,7 @@ export class HeightModifier implements Tool {
     private heightModifier: Mesh;
 
     private HEIGHT_MODIFIER_SIZE = 0.08;
-    private readonly MESH_COLOR = new Color3(1, 0.75, 0);
+    private readonly MESH_COLOR = new Color3(0.4, 0.4, 0.4);
     private readonly MESH_ALPHA = 0.5;
     private listener: any;
     private point = new Vector3();

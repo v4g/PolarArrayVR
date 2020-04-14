@@ -1,5 +1,5 @@
 import {VRState} from './vr-state';
-import { MeshBuilder, Mesh, Vector3, CubeMapToSphericalPolynomialTools, StandardMaterial, Color3} from '@babylonjs/core';
+import { MeshBuilder, Mesh, Vector3, CubeMapToSphericalPolynomialTools, StandardMaterial, Color3, Texture, Scene} from '@babylonjs/core';
 import {SceneState} from './index';
 import {Helpers} from './helpers';
 import { PolarArrayManager } from './polar-array-manager';
@@ -8,7 +8,7 @@ import {Protractor} from './protractor';
 import { PolarArray } from './polar-array';
 import {HeightModifier} from './height-modifier';
 import {MainPanel, Panel} from './panel';
-
+import {BoxSelection} from './box-selection';
 /**
  * This class will be responsible for creating all the GUIs used in creating
  * polar arrays
@@ -16,6 +16,7 @@ import {MainPanel, Panel} from './panel';
 export class PolarArrayGUI {
     static readonly NONE = 0;
     static readonly AXIS_MODE = 1;
+    static readonly SELECTION_MODE = 2;
     private readonly AXIS_COLOR = new Color3(0.7, 0, 0);
     private readonly AXIS_OPACITY = 0.3;
 
@@ -26,6 +27,9 @@ export class PolarArrayGUI {
     private protractor: Protractor;
     private state = PolarArrayGUI.NONE;
     private heightModifier: HeightModifier;
+    private boxSelector: BoxSelection;
+    private confirmationText!: Mesh;
+    private confirmationObserver: any;
     // private mainPanel: MainPanel;
     private constructor() {
         let diameter = 0.02;
@@ -40,6 +44,9 @@ export class PolarArrayGUI {
         this.protractor = new Protractor();
         this.protractor.disable(); 
         this.heightModifier = new HeightModifier();
+        this.boxSelector = new BoxSelection();
+        this.createConfirmationText();
+        this.confirmationObserver = this.confirmationListener.bind(this); 
         // this.mainPanel = new MainPanel();
         // this.createPanel();
     }
@@ -60,11 +67,35 @@ export class PolarArrayGUI {
     //     this.mainPanel.disable();
     // }
 
+    createConfirmationText() {
+        this.confirmationText = MeshBuilder.CreatePlane("confirmationTextPlane", {width: 0.5, height: 0.05, sideOrientation: Mesh.DOUBLESIDE});
+        let material = new StandardMaterial("confirmationMaterial", SceneState.getInstance().scene);
+        let onload = ()=>{
+            console.log("loaded");
+        };
+        material.diffuseTexture = new Texture("./src/AToConfirm.png", SceneState.getInstance().scene, undefined, undefined, undefined, onload);
+        material.diffuseTexture.hasAlpha = true;
+        this.confirmationText.material = material;
+        SceneState.getInstance().scene.addMesh(this.confirmationText);
+        this.confirmationText.isPickable = false;
+        this.disableConfirmation();
+    }
+    enableConfirmation() {
+        this.confirmationText.isVisible = true;
+        this.confirmationText.setEnabled(true);
+    }
+
+    disableConfirmation() {
+        this.confirmationText.isVisible = false;
+        this.confirmationText.setEnabled(false);
+    }
     // Here you can define the axis of the polar array
     enterAxisMode(){
         // Controller can be accessed through VRState
+        console.log("Entering Axis Mode");
         this.axisState = new AxisModeState();
         this.state = PolarArrayGUI.AXIS_MODE;
+        VRState.getInstance().saveState();
         SceneState.getInstance().scene.addMesh(this.mAxisCylinder);
         SceneState.getInstance().beforeRender.set("gui", this.axisModeBeforeRender.bind(this));
         
@@ -94,6 +125,31 @@ export class PolarArrayGUI {
         }
     }
 
+    enterSelectionMode() {
+        console.log("Entering Selection Mode");
+        this.state = PolarArrayGUI.SELECTION_MODE;
+        this.boxSelector.enable();
+        VRState.getInstance().saveState();
+        this.boxSelector.callback = this.selectionConfirmed.bind(this);
+    }
+
+    selectionConfirmed(meshes: Mesh[]) {
+        console.log("Selection Confirmed", meshes.length);
+        if (meshes.length == 0) {
+            this.exitSelectionMode();
+            this.enterSelectionMode();
+        }
+        else {
+            this.exitSelectionMode();
+            PolarArrayManager.getInstance().createPolarArray(meshes);
+        }
+    }
+
+    exitSelectionMode() {
+        this.state = PolarArrayGUI.NONE;
+        this.boxSelector.disable();        
+    }
+
     // Here you can define the rest of the parameters of the polar array, you'd have to render the protractor,
     // alongwith the number of copies input
     enterParamsMode(polarArray: PolarArray) {
@@ -109,12 +165,18 @@ export class PolarArrayGUI {
         
         // TODO: Render the axis handle and assign listener functions
         this.createHeightModifier(polarArray);
+        this.enableConfirmation();
+        SceneState.getInstance().beforeRender.set("params", this.paramsModeBeforeRender.bind(this));
+        VRState.getInstance().rightController.onSecondaryButtonStateChangedObservable.add(this.confirmationObserver);
     }
 
     exitParamsMode() {
         // this.mainPanel.disable();
         this.protractor.disable();
         this.heightModifier.disable();
+        this.disableConfirmation();
+        SceneState.getInstance().beforeRender.delete("params");
+        VRState.getInstance().rightController.onSecondaryButtonStateChangedObservable.remove(this.confirmationObserver);
     }
     createNumberPanel() {
         var num1 = GUI.Button.CreateImageOnlyButton("num1", "textures/num-01.jpg");
@@ -232,7 +294,7 @@ export class PolarArrayGUI {
 
     // These should notify the PolarArrayManager that point on the axis was selected
     axisModeButtonListenerL(event: any) {
-        if (!event.pressed)
+        if (!event.pressed || !VRState.getInstance().eventValidL)
             return;
         this.axisState.leftDecided = true;
         this.axisState.lPosition = VRState.getInstance().leftController.devicePosition.clone();
@@ -240,7 +302,7 @@ export class PolarArrayGUI {
         
     }
     axisModeButtonListenerR(event: any) {
-        if (!event.pressed)
+        if (!event.pressed || !VRState.getInstance().eventValidR)
             return;
         console.log("R Button Pressed");
         this.axisState.rightDecided = true;
@@ -273,7 +335,25 @@ export class PolarArrayGUI {
         this.heightModifier.enable(polar);
     }
 
-    
+    paramsModeBeforeRender() {
+        const controller = VRState.getInstance().leftController;
+        let newPosition = controller.devicePosition.clone();
+        newPosition.subtractInPlace(controller.getForwardRay(1).direction.scale(0.01));
+        let up = new Vector3(0, 1, 0);
+        if (controller.mesh?.getWorldMatrix())
+            up = Vector3.TransformNormal(new Vector3(0, 1, 0), controller.mesh?.getWorldMatrix());
+        newPosition.addInPlace(up.scale(0.4));
+        this.confirmationText.position = newPosition;
+    }
+
+    confirmationListener(event: any) {
+        if(event.pressed) {
+            console.log("Confirmed");
+            this.exitParamsMode();
+            PolarArrayManager.getInstance().finalizeArray();
+            PolarArrayManager.getInstance().selectMeshes();
+        }
+    }
 }
 
 export class AxisModeState {
