@@ -1,14 +1,14 @@
-import {VRState} from './vr-state';
-import { MeshBuilder, Mesh, Vector3, CubeMapToSphericalPolynomialTools, StandardMaterial, Color3, Texture, Scene} from '@babylonjs/core';
-import {SceneState} from './index';
-import {Helpers} from './helpers';
+import { VRState } from './vr-state';
+import { MeshBuilder, Mesh, Vector3, CubeMapToSphericalPolynomialTools, StandardMaterial, Color3, Texture, Scene } from '@babylonjs/core';
+import { SceneState } from './index';
+import { Helpers } from './helpers';
 import { PolarArrayManager } from './polar-array-manager';
 import * as GUI from '@babylonjs/gui';
-import {Protractor} from './protractor';
+import { Protractor } from './protractor';
 import { PolarArray } from './polar-array';
-import {HeightModifier} from './height-modifier';
-import {MainPanel, Panel} from './panel';
-import {BoxSelection} from './box-selection';
+import { HeightModifier } from './height-modifier';
+import { MainPanel, Panel } from './panel';
+import { BoxSelection } from './box-selection';
 /**
  * This class will be responsible for creating all the GUIs used in creating
  * polar arrays
@@ -30,23 +30,25 @@ export class PolarArrayGUI {
     private boxSelector: BoxSelection;
     private confirmationText!: Mesh;
     private confirmationObserver: any;
+    private numPanel!: GUI.StackPanel;
     // private mainPanel: MainPanel;
     private constructor() {
         let diameter = 0.02;
-        this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", {height: 1, diameter});
+        this.mAxisCylinder = MeshBuilder.CreateCylinder("axisCylinder", { height: 1, diameter });
         this.mAxisCylinder.setEnabled(false);
         this.mAxisCylinder.isVisible = false;
         let axisMaterial = new StandardMaterial("axisMaterial", SceneState.getInstance().scene);
         axisMaterial.diffuseColor = this.AXIS_COLOR;
         axisMaterial.alpha = this.AXIS_OPACITY;
         this.mAxisCylinder.material = axisMaterial;
-        
+
         this.protractor = new Protractor();
-        this.protractor.disable(); 
+        this.protractor.disable();
         this.heightModifier = new HeightModifier();
         this.boxSelector = new BoxSelection();
         this.createConfirmationText();
-        this.confirmationObserver = this.confirmationListener.bind(this); 
+        this.confirmationObserver = this.confirmationListener.bind(this);
+        this.createNumberPanel();
         // this.mainPanel = new MainPanel();
         // this.createPanel();
     }
@@ -68,9 +70,9 @@ export class PolarArrayGUI {
     // }
 
     createConfirmationText() {
-        this.confirmationText = MeshBuilder.CreatePlane("confirmationTextPlane", {width: 0.5, height: 0.05, sideOrientation: Mesh.DOUBLESIDE});
+        this.confirmationText = MeshBuilder.CreatePlane("confirmationTextPlane", { width: 0.5, height: 0.05, sideOrientation: Mesh.DOUBLESIDE });
         let material = new StandardMaterial("confirmationMaterial", SceneState.getInstance().scene);
-        let onload = ()=>{
+        let onload = () => {
             console.log("loaded");
         };
         material.diffuseTexture = new Texture("./src/AToConfirm.png", SceneState.getInstance().scene, undefined, undefined, undefined, onload);
@@ -90,7 +92,7 @@ export class PolarArrayGUI {
         this.confirmationText.setEnabled(false);
     }
     // Here you can define the axis of the polar array
-    enterAxisMode(){
+    enterAxisMode() {
         // Controller can be accessed through VRState
         console.log("Entering Axis Mode");
         this.axisState = new AxisModeState();
@@ -98,12 +100,12 @@ export class PolarArrayGUI {
         VRState.getInstance().saveState();
         SceneState.getInstance().scene.addMesh(this.mAxisCylinder);
         SceneState.getInstance().beforeRender.set("gui", this.axisModeBeforeRender.bind(this));
-        
+
         // This is the position selected by the user where they want the endpoints to be
         // It is device position right now because the user hasn't fixed it
         this.axisState.lPosition = VRState.getInstance().leftController.devicePosition;
         this.axisState.rPosition = VRState.getInstance().rightController.devicePosition;
-        
+
         // Set listener functions for the controller buttons to know when it has ended
         this.axisState.lObservable = this.axisModeButtonListenerL.bind(this);
         this.axisState.rObservable = this.axisModeButtonListenerR.bind(this);
@@ -121,7 +123,7 @@ export class PolarArrayGUI {
             SceneState.getInstance().beforeRender.delete("gui");
             this.mAxisCylinder.setEnabled(false);
             this.mAxisCylinder.isVisible = false;
-        
+
         }
     }
 
@@ -147,7 +149,7 @@ export class PolarArrayGUI {
 
     exitSelectionMode() {
         this.state = PolarArrayGUI.NONE;
-        this.boxSelector.disable();        
+        this.boxSelector.disable();
     }
 
     // Here you can define the rest of the parameters of the polar array, you'd have to render the protractor,
@@ -159,9 +161,9 @@ export class PolarArrayGUI {
         // TODO: Render the protractor, assign listener functions for the controllers
         this.protractor.enable();
         this.protractor.setPosition(VRState.getInstance().leftController.devicePosition);
-        
+
         // TODO: Render the number input panel, assign listener functions
-        // this.createNumberPanel();
+        this.showNumberPanel();
         
         // TODO: Render the axis handle and assign listener functions
         this.createHeightModifier(polarArray);
@@ -177,6 +179,7 @@ export class PolarArrayGUI {
         this.disableConfirmation();
         SceneState.getInstance().beforeRender.delete("params");
         VRState.getInstance().rightController.onSecondaryButtonStateChangedObservable.remove(this.confirmationObserver);
+        this.hideNumberPanel();
     }
     createNumberPanel() {
         var num1 = GUI.Button.CreateImageOnlyButton("num1", "textures/num-01.jpg");
@@ -202,7 +205,7 @@ export class PolarArrayGUI {
         but1.width = "100px";
         but1.fontSize = "18px"
         but2.width = "100px";
-        but2.fontSize ="18px";
+        but2.fontSize = "18px";
 
         let numPalette1 = new GUI.StackPanel();
         numPalette1.isVertical = false;
@@ -229,6 +232,7 @@ export class PolarArrayGUI {
         numBlock.height = "40px";
         numBlock.color = "black";
         numBlock.fontSize = "18px";
+        numBlock.text = "12";
 
         let butPalette = new GUI.StackPanel();
         butPalette.isVertical = false;
@@ -237,7 +241,8 @@ export class PolarArrayGUI {
         butPalette.addControl(but1);
         butPalette.addControl(but2);
 
-        let numPanel = new GUI.StackPanel();
+        this.numPanel = new GUI.StackPanel();
+        const numPanel = this.numPanel;
         numPanel.width = "200px";
         numPanel.background = "white";
         numPanel.color = "black";
@@ -248,8 +253,8 @@ export class PolarArrayGUI {
 
         let plane = MeshBuilder.CreatePlane("plane", { size: 3 }, SceneState.getInstance().scene);
         let advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(plane)
-        advancedTexture.addControl(numPanel);     
-        plane.position = new Vector3(0,2,2)
+        advancedTexture.addControl(numPanel);
+        plane.position = new Vector3(0, 2, 2)
         // plane.position = VRState.getInstance().leftController.devicePosition;
         // plane.position.y += 0.1;
         // plane.rotationQuaternion = VRState.getInstance().head.deviceRotationQuaternion;     
@@ -293,7 +298,16 @@ export class PolarArrayGUI {
             numBlock.text = "";
         })
         but2.onPointerClickObservable.add((data, state) => {
+            PolarArrayManager.getInstance().setCopies(parseInt(numBlock.text));
         })
+    }
+    showNumberPanel() {
+        this.numPanel.isVisible = true;
+        this.numPanel.isEnabled = true;
+    }
+    hideNumberPanel() {
+        this.numPanel.isVisible = false;
+        this.numPanel.isEnabled = false;
     }
 
     // These should notify the PolarArrayManager that point on the axis was selected
@@ -303,15 +317,15 @@ export class PolarArrayGUI {
         this.axisState.leftDecided = true;
         this.axisState.lPosition = VRState.getInstance().leftController.devicePosition.clone();
         console.log("L Button was Pressed");
-        
+
     }
     axisModeButtonListenerR(event: any) {
         if (!event.pressed || !VRState.getInstance().eventValidR)
             return;
         console.log("R Button Pressed");
         this.axisState.rightDecided = true;
-        this.axisState.rPosition = VRState.getInstance().rightController.devicePosition.clone();       
-        
+        this.axisState.rPosition = VRState.getInstance().rightController.devicePosition.clone();
+
     }
     // This function is called before the render function
     // Use it to decide what to do for the axis mode
@@ -351,7 +365,7 @@ export class PolarArrayGUI {
     }
 
     confirmationListener(event: any) {
-        if(event.pressed) {
+        if (event.pressed) {
             console.log("Confirmed");
             this.exitParamsMode();
             PolarArrayManager.getInstance().finalizeArray();

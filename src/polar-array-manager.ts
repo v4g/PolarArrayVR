@@ -76,6 +76,17 @@ export class PolarArrayManager {
         }
     }
 
+    setCopies(copies: number) {
+        if (this.currentPolarArray) {
+            this.currentPolarArray.n_copies = copies;
+            // TODO: Store this rendering and polar array somewhere
+            if (this.render) {
+                this.render.destroy();
+            }
+            this.render = new PolarArrayRender(this.currentPolarArray);
+        }
+    }
+
     finalizeArray() {
         const allMeshes = SceneState.getInstance().allMeshes;
         this.render.copies.forEach(copy => {
