@@ -2,6 +2,7 @@ import { Mesh, Vector3 } from "@babylonjs/core";
 import { PolarArrayGUI, AxisModeState } from './polar-array-gui';
 import { PolarArray } from './polar-array';
 import { PolarArrayRender } from './polar-array-render';
+import { SceneState } from ".";
 
 /**
  * This class will be resposible for ultimately creating all
@@ -23,15 +24,19 @@ export class PolarArrayManager {
         return PolarArrayManager.instance;
     }
 
+    selectMeshes() {
+        PolarArrayGUI.getInstance().enterSelectionMode();
+    }
+
     // This function will create a new polar array by initializing the GUI
     // It will run through the whole workflow
     // (Ideally there should be a GUI manager) but this will command the GUI
     // The GUI will send messages back to the manager
     // The manager will be in different states depending on where in the execution it is
-    createPolarArray(mesh: Mesh) {
-        this.currentPolarArray = new PolarArray(mesh);
+    createPolarArray(meshes: Mesh[]) {
+        this.currentPolarArray = new PolarArray(meshes);
         // initialize GUI for Axis
-        this.currentPolarArray = new PolarArray(mesh);
+        // this.currentPolarArray = new PolarArray(meshes);
         PolarArrayGUI.getInstance().enterAxisMode();
 
     }
@@ -52,10 +57,11 @@ export class PolarArrayManager {
             this.currentPolarArray.totalAngle = angle;
             // TODO: Store this rendering and polar array somewhere
             if (this.render) {
-                this.render.destroy();
+                this.render.updateRender(this.currentPolarArray);
             }
-            this.render = new PolarArrayRender(this.currentPolarArray);
-        }    
+            else
+                this.render = new PolarArrayRender(this.currentPolarArray);
+        }
     }
 
     setHeight(height: number) {
@@ -63,9 +69,53 @@ export class PolarArrayManager {
             this.currentPolarArray.height = height;
             // TODO: Store this rendering and polar array somewhere
             if (this.render) {
+                this.render.updateRender(this.currentPolarArray);
+            }
+            else
+                this.render = new PolarArrayRender(this.currentPolarArray);
+        }
+    }
+
+    deltaHeight(height: number) {
+        if (this.currentPolarArray) {
+            this.currentPolarArray.height += height;
+            // TODO: Store this rendering and polar array somewhere
+            if (this.render) {
+                this.render.updateRender(this.currentPolarArray);
+            }
+            else
+                this.render = new PolarArrayRender(this.currentPolarArray);
+        }
+    }
+    setCopies(copies: number) {
+        if (this.currentPolarArray) {
+            this.currentPolarArray.n_copies = copies;
+            // TODO: Store this rendering and polar array somewhere
+            if (this.render) {
                 this.render.destroy();
             }
             this.render = new PolarArrayRender(this.currentPolarArray);
-        }        
+        }
+    }
+
+    finalizeArray() {
+        const allMeshes = SceneState.getInstance().allMeshes;
+        this.render.copies.forEach(copy => {
+            allMeshes.push(copy);
+        });
+        this.render.finalize();
+    }
+
+    cancelArray() {
+        this.render.destroy();
+    }
+
+    finalizeRibbon() {
+        const allMeshes = SceneState.getInstance().allMeshes;
+        this.render.copies.forEach(copy => {
+            allMeshes.push(copy);
+        });
+        this.render.renderRibbon();
+        this.render.finalize();
     }
 }

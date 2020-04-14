@@ -1,12 +1,19 @@
 import {WebVRController, WebVRFreeCamera, Camera, Vector3} from "@babylonjs/core";
+import { SceneState } from ".";
 export class VRState {
     valid = false;
-    leftController!: WebVRController;
-    rightController!: WebVRController;
+    private _leftController!: WebVRController;
+    private _rightController!: WebVRController;
     camera!: Camera;
     head!: WebVRFreeCamera;
+    eventValidL = true;
+    eventValidR = true;
+    lastStateL = false;
+    lastStateR = false;
+    private btnStateL = false;
+    private btnStateR = false;
     private static instance: VRState;
-    
+    private zoomTrigger = new SecondaryTriggerState();
     private constructor() {
 
     }
@@ -16,6 +23,92 @@ export class VRState {
             VRState.instance = new VRState();
         }
         return VRState.instance;
+    }
+
+    saveState() {
+        this.lastStateL = this.btnStateL;
+        this.lastStateR = this.btnStateR;
+        this.eventValidL = false;
+        this.eventValidR = false;
+    }
+    set leftController(left: WebVRController) {
+        this._leftController = left;
+        left.onTriggerStateChangedObservable.add((event)=> {
+            this.btnStateL = event.pressed;
+            // lastStateL contains the state when the UI mode was changing
+            // If that was true and the button is now unpresssed, its valid
+            if (this.lastStateL == true && !event.pressed && !this.eventValidL) {
+                this.eventValidL = true;
+            } else if (this.lastStateL == false) {
+                this.eventValidL = true;
+            }
+        });
+        left.onButtonStateChange((controlledIndex, index, state) => {
+            if (index == 2) {
+                this.secondaryTriggerL(state);
+            }
+        });
+        SceneState.getInstance().beforeRender.set("VRState", this.beforeRender.bind(this));
+    }
+
+    get leftController(): WebVRController {
+        return this._leftController;
+    }
+    set rightController(right: WebVRController) {
+        this._rightController = right;
+        right.onTriggerStateChangedObservable.add((event)=> {
+            this.btnStateR = event.pressed;
+            // lastStateL contains the state when the UI mode was changing
+            // If that was true and the button is now unpresssed, its valid
+            if (this.lastStateR == true && !event.pressed && !this.eventValidR) {
+                this.eventValidR = true;
+            } else if (this.lastStateR == false) {
+                this.eventValidR = true;
+            }
+        })
+        right.onButtonStateChange((controlledIndex, index, state) => {
+            if (index == 2) {
+                this.secondaryTriggerR(state);
+            }
+        });
+    }
+
+    get rightController(): WebVRController {
+        return this._rightController;
+    }
+
+    secondaryTriggerL(event: any) {
+        if (event.pressed) {
+            this.zoomTrigger.isSecondaryTriggerHeldL = true;
+            if (this.zoomTrigger.isSecondaryTriggerHeldR && !this.zoomTrigger.isZooming) {
+                this.zoomTrigger.isZooming = true;
+                this.zoomTrigger.zoomVector = this.leftController.devicePosition.subtract(this.rightController.devicePosition);
+            }
+        } else {
+            this.zoomTrigger.isSecondaryTriggerHeldL = false;
+            this.zoomTrigger.isZooming = false;
+        }
+    }
+    secondaryTriggerR(event: any) {
+        if (event.pressed) {
+            this.zoomTrigger.isSecondaryTriggerHeldR = true;
+            if (this.zoomTrigger.isSecondaryTriggerHeldL && !this.zoomTrigger.isZooming) {
+                this.zoomTrigger.isZooming = true;
+                this.zoomTrigger.zoomVector = this.leftController.devicePosition.subtract(this.rightController.devicePosition);
+            }
+        } else {
+            this.zoomTrigger.isZooming = false;
+            this.zoomTrigger.isSecondaryTriggerHeldR = false;
+        }
+    }
+
+    beforeRender() {
+        if (this.zoomTrigger.isZooming) {
+            const vec = this.leftController.devicePosition.subtract(this.rightController.devicePosition);
+            const zoom = vec.length() - this.zoomTrigger.zoomVector.length();
+            const ray = (this.camera as WebVRFreeCamera).getForwardRay(1);
+            (this.camera as WebVRFreeCamera).position.addInPlace(ray.direction.scale(zoom));   
+        }
     }
 
     isControllerTwisted() {
@@ -41,3 +134,10 @@ export class VRState {
         }
     }
 };
+
+class SecondaryTriggerState {
+    isSecondaryTriggerHeldL = false;
+    isSecondaryTriggerHeldR = false;
+    isZooming = false;
+    zoomVector = new Vector3();
+}
