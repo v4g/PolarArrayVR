@@ -76,6 +76,17 @@ export class PolarArrayManager {
         }
     }
 
+    deltaHeight(height: number) {
+        if (this.currentPolarArray) {
+            this.currentPolarArray.height += height;
+            // TODO: Store this rendering and polar array somewhere
+            if (this.render) {
+                this.render.updateRender(this.currentPolarArray);
+            }
+            else
+                this.render = new PolarArrayRender(this.currentPolarArray);
+        }
+    }
     setCopies(copies: number) {
         if (this.currentPolarArray) {
             this.currentPolarArray.n_copies = copies;
@@ -92,6 +103,19 @@ export class PolarArrayManager {
         this.render.copies.forEach(copy => {
             allMeshes.push(copy);
         });
+        this.render.finalize();
+    }
+
+    cancelArray() {
+        this.render.destroy();
+    }
+
+    finalizeRibbon() {
+        const allMeshes = SceneState.getInstance().allMeshes;
+        this.render.copies.forEach(copy => {
+            allMeshes.push(copy);
+        });
+        this.render.renderRibbon();
         this.render.finalize();
     }
 }

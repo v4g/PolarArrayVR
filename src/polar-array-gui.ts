@@ -30,6 +30,8 @@ export class PolarArrayGUI {
     private boxSelector: BoxSelection;
     private confirmationText!: Mesh;
     private confirmationObserver: any;
+    private cancelObserver: any;
+    private confirmationObserverRibbon: any;
     private numPanel!: GUI.StackPanel;
     // private mainPanel: MainPanel;
     private constructor() {
@@ -48,6 +50,10 @@ export class PolarArrayGUI {
         this.boxSelector = new BoxSelection();
         this.createConfirmationText();
         this.confirmationObserver = this.confirmationListener.bind(this);
+        this.cancelObserver = this.cancelListener.bind(this);
+        this.confirmationObserverRibbon = this.confirmationListenerRibbon.bind(this);
+        this.cancelObserver = this.cancelListener.bind(this);
+        
         this.createNumberPanel();
         this.hideNumberPanel();
         // this.mainPanel = new MainPanel();
@@ -168,9 +174,11 @@ export class PolarArrayGUI {
         
         // TODO: Render the axis handle and assign listener functions
         this.createHeightModifier(polarArray);
-        this.enableConfirmation();
-        SceneState.getInstance().beforeRender.set("params", this.paramsModeBeforeRender.bind(this));
+        // this.enableConfirmation();
+        // SceneState.getInstance().beforeRender.set("params", this.paramsModeBeforeRender.bind(this));
         VRState.getInstance().rightController.onSecondaryButtonStateChangedObservable.add(this.confirmationObserver);
+        VRState.getInstance().leftController.onSecondaryButtonStateChangedObservable.add(this.confirmationObserverRibbon);
+        VRState.getInstance().leftController.onMainButtonStateChangedObservable.add(this.cancelObserver);
     }
 
     exitParamsMode() {
@@ -178,8 +186,10 @@ export class PolarArrayGUI {
         this.protractor.disable();
         this.heightModifier.disable();
         this.disableConfirmation();
-        SceneState.getInstance().beforeRender.delete("params");
+        // SceneState.getInstance().beforeRender.delete("params");
         VRState.getInstance().rightController.onSecondaryButtonStateChangedObservable.remove(this.confirmationObserver);
+        VRState.getInstance().leftController.onSecondaryButtonStateChangedObservable.remove(this.confirmationObserverRibbon);
+        VRState.getInstance().leftController.onMainButtonStateChangedObservable.remove(this.cancelObserver);
         this.hideNumberPanel();
     }
     createNumberPanel() {
@@ -370,6 +380,22 @@ export class PolarArrayGUI {
             console.log("Confirmed");
             this.exitParamsMode();
             PolarArrayManager.getInstance().finalizeArray();
+            PolarArrayManager.getInstance().selectMeshes();
+        }
+    }
+    confirmationListenerRibbon(event: any) {
+        if (event.pressed) {
+            console.log("Confirmed");
+            this.exitParamsMode();
+            PolarArrayManager.getInstance().finalizeRibbon();
+            PolarArrayManager.getInstance().selectMeshes();
+        }
+    }
+    cancelListener(event: any) {
+        if (event.pressed) {
+            console.log("Cancelled");
+            this.exitParamsMode();
+            PolarArrayManager.getInstance().cancelArray();
             PolarArrayManager.getInstance().selectMeshes();
         }
     }

@@ -1,5 +1,5 @@
 import { PolarArray } from "./polar-array";
-import { Mesh, Quaternion, Vector3, MeshBuilder, Color3, StandardMaterial, Scene, Space } from "@babylonjs/core";
+import { Mesh, Quaternion, Vector3, MeshBuilder, Color3, StandardMaterial, Scene, Space, DeepImmutable } from "@babylonjs/core";
 import { SceneState } from './index';
 import { Helpers } from "./helpers";
 
@@ -16,6 +16,7 @@ export class PolarArrayRender {
     axis: Mesh;
     AXIS_WIDTH = 0.001;
     AXIS_HEIGHT = 5;
+    ribbon!: Mesh;
     constructor(polar: PolarArray) {
         console.log("Creating copies");
         const scaleVector = polar.axis.scale(polar.height);
@@ -47,11 +48,10 @@ export class PolarArrayRender {
     }
 
     updateRender(polar: PolarArray) {
-        console.log("Creating copies");
         const scaleVector = polar.axis.scale(polar.height);
         for (let i = 1; i < polar.n_copies; i++) {
             for (let j = 0; j < polar.meshes.length; j++) {
-                let newCopy = this.copies[(i-1) * polar.meshes.length + j];
+                let newCopy = this.copies[(i - 1) * polar.meshes.length + j];
                 let angle = i * polar.totalAngle / polar.n_copies;
                 let quaternion = Quaternion.RotationAxis(polar.axis, angle);
                 let newPosition = new Vector3();
@@ -59,9 +59,48 @@ export class PolarArrayRender {
                 newCopy.position.rotateByQuaternionAroundPointToRef(quaternion, polar.point, newPosition);
                 newPosition.addInPlace(scaleVector.scale(i / polar.n_copies));
                 newCopy.position = newPosition;
+                if (newCopy.rotationQuaternion)
+                    newCopy.rotationQuaternion = null;
+                newCopy.rotation.copyFrom(polar.meshes[j].rotation);
+                console.log(polar.meshes[j].rotationQuaternion);
+                if (polar.meshes[j].rotationQuaternion) {
+                    console.log("Old Quaternion");
+                    console.log(polar.meshes[j].rotationQuaternion?.x, polar.meshes[j].rotationQuaternion?.y, polar.meshes[j].rotationQuaternion?.z);
+                    newCopy.rotationQuaternion = (polar.meshes[j].rotationQuaternion as Quaternion).clone();
+                }
+                if (j == 0) {
+                    // console.log(newCopy.rotation.x, newCopy.rotation.y, newCopy.rotation.z, angle);
+                }
+                newCopy.rotate(polar.axis, angle, Space.WORLD);
+
             }
-        }  
-        this.polarArray = polar; 
+        }
+        this.polarArray = polar;
+    }
+
+    renderRibbon() {
+        if (this.ribbon) {
+            SceneState.getInstance().scene.removeMesh(this.ribbon);
+            this.ribbon.dispose();
+        }
+        const polar = this.polarArray;
+        if (this.polarArray.meshes.length > 1) {
+            let controlPoints = [];
+            for (let j = 0; j < polar.meshes.length; j++) {
+                let cp = [];
+                for (let i = 1; i < polar.n_copies; i++) {
+                    console.log((i - 1) * polar.meshes.length + j);
+                    const copy = this.copies[(i - 1) * polar.meshes.length + j];
+                    cp.push(copy.position.clone());
+                }
+                controlPoints.push(cp);
+            }
+            let close = false;
+            if (this.polarArray.height == 0 && this.polarArray.totalAngle > 5 * Math.PI / 6) {
+                close = true;
+            }
+            this.ribbon = MeshBuilder.CreateRibbon("polar" + Math.random() * 100, { pathArray: controlPoints, closePath: close, sideOrientation: Mesh.DOUBLESIDE });
+        }
     }
 
     destroy() {
@@ -71,6 +110,11 @@ export class PolarArrayRender {
         })
         SceneState.getInstance().scene.removeMesh(this.axis);
         this.axis.dispose(false, true);
+        if (this.ribbon) {
+            SceneState.getInstance().scene.removeMesh(this.ribbon);
+            this.ribbon.dispose();
+        }
+
     }
     finalize() {
         SceneState.getInstance().scene.removeMesh(this.axis);

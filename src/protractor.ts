@@ -23,6 +23,7 @@ export class Protractor implements Tool {
     private readonly COVERING_COLOR = new Color3(0, 0, 0.3);
     private readonly TICK_COLOR = new Color3(0, 0, 0);
     private callback: any;
+    private padCallback: any;
 
     private _angle = 0;
     private mesh!: Mesh;
@@ -31,10 +32,12 @@ export class Protractor implements Tool {
     private isHeld = false;
     private coveringMesh!: Mesh;
     private coveringMaterial!: StandardMaterial;
+    private angleUpdated = false;
 
     constructor() {
         this.createProtractorMesh();
         this.callback = this.inputListener.bind(this);
+        this.padCallback = this.padListener.bind(this);
     }
 
     set angle(radians: number) {
@@ -75,11 +78,12 @@ export class Protractor implements Tool {
 
     enable() {
         console.log("Protractor was Enabled");
-        console.trace();
         this.mesh.isPickable = true;
         this.mesh.isVisible = true;
         this.mesh.setEnabled(true);
+        this.angle = Math.PI * 2;
         VRState.getInstance().rightController.onTriggerStateChangedObservable.add(this.callback);
+        VRState.getInstance().leftController.onPadValuesChangedObservable.add(this.padCallback);
         SceneState.getInstance().beforeRender.set("Protractor", this.beforeRender.bind(this));
     }
     disable() {
@@ -87,6 +91,7 @@ export class Protractor implements Tool {
         this.mesh.isVisible = false;
         this.mesh.setEnabled(false);
         VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.callback);
+        VRState.getInstance().leftController.onPadValuesChangedObservable.remove(this.padCallback);
         SceneState.getInstance().beforeRender.delete("Protractor");
         this.isHeld = false;
     }
@@ -118,6 +123,10 @@ export class Protractor implements Tool {
                 PolarArrayManager.getInstance().setAngle(this.angle);
             }
         }
+        if (this.angleUpdated) {
+            PolarArrayManager.getInstance().setAngle(this.angle);
+            this.angleUpdated = false;
+        }
     }
 
     /**
@@ -140,6 +149,16 @@ export class Protractor implements Tool {
         }
     }
 
+    padListener(event: any) {
+        const vec = new Vector3(event.x, event.y, 0);
+        console.log("Length of vector", vec.length());
+        if (vec.length() > 0.5) {
+            const theta = Math.atan2(vec.y, vec.x);
+            this.angle = theta;
+            this.angleUpdated = true;
+        }
+    }
+
     setPointer() {
         let newPosition = new Vector3();
         this.ZERO_VEC.rotateByQuaternionToRef(Quaternion.RotationAxis(this.UP, this.angle), newPosition);
@@ -153,7 +172,7 @@ export class Protractor implements Tool {
         this.mesh.addChild(this.coveringMesh);
         this.coveringMesh.position.set(0, 0, 0);
         this.coveringMesh.scaling.set(1, 1, 1);
-        this.coveringMesh.rotation.set(0, 0 ,0);
+        this.coveringMesh.rotation.set(0, 0, 0);
         this.coveringMesh.rotate(this.UP, Vector3.GetAngleBetweenVectors(this.ZERO_VEC, new Vector3(-1, 0, 0), this.UP));
         this.coveringMesh.material = this.coveringMaterial;
     }

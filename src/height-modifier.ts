@@ -15,6 +15,8 @@ export class HeightModifier implements Tool {
     private point = new Vector3();
     private axis = new Vector3();
     private isHeld = false;
+    private padCallback: any;
+
 
     constructor() {
         this.heightModifier = MeshBuilder.CreateSphere("HeightModifier", { diameter: this.HEIGHT_MODIFIER_SIZE });
@@ -25,6 +27,8 @@ export class HeightModifier implements Tool {
         
         this.disable();
         this.listener = this.rControllerCallback.bind(this);
+        this.padCallback = this.padListener.bind(this);
+    
     }
 
     disable() {
@@ -33,6 +37,7 @@ export class HeightModifier implements Tool {
         this.heightModifier.setEnabled(false);
         this.isHeld = false;
         VRState.getInstance().rightController.onTriggerStateChangedObservable.remove(this.listener);
+        VRState.getInstance().leftController.onPadValuesChangedObservable.remove(this.padCallback);
         SceneState.getInstance().beforeRender.delete("heightmodifier");
     }
     enable(polar: PolarArray) {
@@ -45,6 +50,8 @@ export class HeightModifier implements Tool {
         this.axis.copyFrom(polar.axis);
         VRState.getInstance().rightController.onTriggerStateChangedObservable.add(this.listener);
         SceneState.getInstance().beforeRender.set("heightmodifier", this.preRenderCallback.bind(this));
+        VRState.getInstance().rightController.onPadValuesChangedObservable.add(this.padCallback);
+        
     }
     preRenderCallback() {
         const controller = VRState.getInstance().rightController;
@@ -65,6 +72,9 @@ export class HeightModifier implements Tool {
                 PolarArrayManager.getInstance().setHeight(height);
             }
         }
+    }
+    padListener(event: any) {
+        PolarArrayManager.getInstance().deltaHeight(0.1 * event.y);
     }
     rControllerCallback(event: any) {
         if (!event.pressed) {

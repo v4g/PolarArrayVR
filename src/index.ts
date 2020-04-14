@@ -79,17 +79,28 @@ class MyScene{
         var light2 = new PointLight("light2", new Vector3(0, 1, -1), this.scene);
         // Add and manipulate meshes in the scene
 
-        var sphere = MeshBuilder.CreateSphere("sphere", {diameter:0.02}, this.scene);
-        sphere.position.set(0, 2, 0.5);
+        var sphere = MeshBuilder.CreateBox("sphere", {size:0.02}, this.scene);
+        sphere.position.set(0.2, 1.5, 0.2);
         console.log("something");
         
         this.myGround = MeshBuilder.CreateGround("myGround", { height: 15, width: 10, subdivisions: 4 }, this.scene);
+        
         let standardMaterial = new StandardMaterial("ground_mat",this.scene);
         standardMaterial.diffuseColor = new Color3(0.5,0.5,0.5);
+        standardMaterial.alpha = 0.2;
         this.myGround.material = standardMaterial;
         this.myGround.position = new Vector3(0, 0, 0);
         this.myGround.isPickable = false;
         
+        var instructionsPlane = MeshBuilder.CreatePlane("instructionsPlane", {size: 4, sideOrientation: Mesh.DOUBLESIDE}, scene);
+        let material = new StandardMaterial("InstructionsMaterial", scene);
+        material.diffuseTexture = new Texture("./src/Instructions.png", SceneState.getInstance().scene);
+        material.diffuseTexture.hasAlpha = true;
+        instructionsPlane.material = material;
+        instructionsPlane.position.set(0, 2, 4);
+        instructionsPlane.isPickable = false;
+        // instructionsPlane.rotation.set(Math.PI/2, 0, 0);
+
         var webVr = this.scene.createDefaultVRExperience();
         webVr.enableInteractions();
 
