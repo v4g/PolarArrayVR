@@ -49,6 +49,7 @@ export class PolarArrayGUI {
         this.createConfirmationText();
         this.confirmationObserver = this.confirmationListener.bind(this);
         this.createNumberPanel();
+        this.hideNumberPanel();
         // this.mainPanel = new MainPanel();
         // this.createPanel();
     }

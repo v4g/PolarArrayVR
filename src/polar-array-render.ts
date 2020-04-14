@@ -1,5 +1,5 @@
 import { PolarArray } from "./polar-array";
-import { Mesh, Quaternion, Vector3, MeshBuilder, Color3, StandardMaterial, Scene } from "@babylonjs/core";
+import { Mesh, Quaternion, Vector3, MeshBuilder, Color3, StandardMaterial, Scene, Space } from "@babylonjs/core";
 import { SceneState } from './index';
 import { Helpers } from "./helpers";
 
@@ -29,7 +29,7 @@ export class PolarArrayRender {
                 newCopy.position.rotateByQuaternionAroundPointToRef(quaternion, polar.point, newPosition);
                 newPosition.addInPlace(scaleVector.scale(i / polar.n_copies));
                 newCopy.position = newPosition;
-
+                newCopy.rotate(polar.axis, angle, Space.WORLD);
                 this.copies.push(newCopy);
                 SceneState.getInstance().scene.addMesh(newCopy);
 

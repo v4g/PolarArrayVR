@@ -8,6 +8,7 @@ import {AdvancedDynamicTexture, StackPanel, TextBlock, Control, ColorPicker, But
 import { VRState } from "./vr-state";
 import { PolarArrayManager } from "./polar-array-manager";
 
+import "@babylonjs/loaders/OBJ";
 import "@babylonjs/core/Helpers/sceneHelpers";
 import "@babylonjs/core/Loading/Plugins/babylonFileLoader";
 
@@ -24,6 +25,7 @@ import "@babylonjs/core/Gamepads";
 import { WebVRFreeCamera } from "@babylonjs/core/Cameras/VR/webVRCamera";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { VertexBuffer } from "@babylonjs/core/Meshes/buffer";
+import { SceneLoader } from "@babylonjs/core";
 var canvas = document.getElementById("renderCanvas") as HTMLCanvasElement; // Get the canvas element 
 var engine = new Engine(canvas, true); // Generate the BABYLON 3D engine
 
@@ -90,6 +92,7 @@ class MyScene{
         
         var webVr = this.scene.createDefaultVRExperience();
         webVr.enableInteractions();
+
         
         this.vrState = VRState.getInstance();
         let sceneState = SceneState.getInstance();
@@ -98,6 +101,19 @@ class MyScene{
         this.scene.registerBeforeRender(()=>{
             this.beforeRender();            
         })
+        SceneLoader.ImportMesh("", "src/chair/", "Chair.obj", scene, function (newMeshes) {
+            newMeshes[0].position = new Vector3(0, 1.5, 0.2);
+            newMeshes[0].scaling.set(0.005, 0.005, 0.005);
+            newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+            sceneState.allMeshes.push(newMeshes[0] as Mesh);
+            console.log("Chair Imported");
+            // newMeshes[0].scaling = new Vector3(0.2, 0.2, 0.2);
+            // console.log(myMaterialSpot);
+            // newMeshes[0].material = myMaterialCamo;
+            // shadowGenerator2.addShadowCaster(newMeshes[0]);
+            // shadowGenerator3.addShadowCaster(newMeshes[0]);
+        });
+        
         this.vrState.camera = webVr.webVRCamera;
         webVr.webVRCamera.onControllersAttachedObservable.add(()=>{
             this.vrState.valid = true;

@@ -5,8 +5,9 @@
     "main": "index.ts",
     "dependencies": {},
     "devDependencies": {
-        "@babylonjs/core": "^4.0.3",
+        "@babylonjs/core": "^4.1.0",
         "@babylonjs/gui": "^4.0.3",
+        "@babylonjs/loaders": "^4.1.0",
         "@babylonjs/materials": "^4.0.3",
         "ts-loader": "^6.2.1",
         "typescript": "^3.7.4",
