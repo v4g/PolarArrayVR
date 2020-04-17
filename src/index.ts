@@ -7,6 +7,7 @@ import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { AdvancedDynamicTexture, StackPanel, TextBlock, Control, ColorPicker, Button } from "@babylonjs/gui";
 import { VRState } from "./vr-state";
 import { PolarArrayManager } from "./polar-array-manager";
+import * as GUI from '@babylonjs/gui';
 
 import "@babylonjs/loaders/OBJ";
 import "@babylonjs/core/Helpers/sceneHelpers";
@@ -99,8 +100,16 @@ class MyScene {
         material.diffuseTexture = new Texture("./src/Instructions.png", SceneState.getInstance().scene);
         material.diffuseTexture.hasAlpha = true;
         instructionsPlane.material = material;
-        instructionsPlane.position.set(0, 2, 4);
+        instructionsPlane.position.set(0, 2, 5);
         instructionsPlane.isPickable = false;
+
+        // let instruction = new GUI.TextBlock();
+        // instruction.width = "800px";
+        // instruction.height = "800px";
+        // instruction.color = "black";
+        // instruction.fontSize = "18px";
+        // instruction.text = "20";
+        // instruction.text = "0. Press and hold the secondary trigger to zoom"
 
         var webVr = this.scene.createDefaultVRExperience();
         webVr.enableInteractions();
@@ -113,10 +122,46 @@ class MyScene {
         this.scene.registerBeforeRender(() => {
             this.beforeRender();
         })
-        // SceneLoader.ImportMesh("", "src/chair/", "Chair.obj", scene, function (newMeshes) {
-        //     newMeshes[0].position = new Vector3(0, 1.5, 0.2);
-        //     newMeshes[0].scaling.set(0.005, 0.005, 0.005);
+
+        // SceneLoader.ImportMesh("", "src/Chair/", "Chair.obj", scene, function (newMeshes) {
+        //     newMeshes[0].position = new Vector3(0, 0, -1.8);
+        //     newMeshes[0].scaling.set(0.025, 0.025, 0.025);
         //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        //     sceneState.allMeshes.push(newMeshes[0] as Mesh);
+        //     console.log("Chair Imported");
+        // });
+
+        // SceneLoader.ImportMesh("", "src/models/", "round.obj", scene, function (newMeshes) {
+        //     newMeshes[0].position = new Vector3(0, 0, -3);
+        //     newMeshes[0].scaling.set(0.04, 0.04, 0.04);
+        //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        // });
+        SceneLoader.ImportMesh("", "src/models/", "turbine.obj", scene, function (newMeshes) {
+            newMeshes[0].position = new Vector3(0, 1, -2);
+            newMeshes[0].scaling.set(0.04, 0.04, 0.04);
+            newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        });
+
+        SceneLoader.ImportMesh("", "src/models/", "blade.obj", scene, function (newMeshes) {
+            newMeshes[0].position = new Vector3(0, 1, -2);
+            newMeshes[0].scaling.set(0.04, 0.04, 0.04);
+            newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        });
+
+        // SceneLoader.ImportMesh("", "src/test/", "test2.obj", scene, function (newMeshes) {
+        //     newMeshes[0].position = new Vector3(0, 1, -2);
+        //     newMeshes[0].scaling.set(0.04, 0.04, 0.04);
+        //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        // });
+
+        let mat = new StandardMaterial("material", scene);
+        mat.diffuseColor = new Color3(1,1,0)
+
+        // SceneLoader.ImportMesh("", "src/Chair/", "untitled.obj", scene, function (newMeshes) {
+        //     newMeshes[0].position = new Vector3(0, 0.5, 1);
+        //     newMeshes[0].scaling.set(0.1, 0.1, 0.1);
+        //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        //     newMeshes[0].material = mat;
         //     sceneState.allMeshes.push(newMeshes[0] as Mesh);
         //     console.log("Chair Imported");
         // });
