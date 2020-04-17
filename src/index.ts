@@ -136,6 +136,7 @@ class MyScene {
         //     newMeshes[0].scaling.set(0.04, 0.04, 0.04);
         //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
         // });
+        
         SceneLoader.ImportMesh("", "src/models/", "turbine.obj", scene, function (newMeshes) {
             newMeshes[0].position = new Vector3(0, 1, -2);
             newMeshes[0].scaling.set(0.04, 0.04, 0.04);
@@ -146,25 +147,11 @@ class MyScene {
             newMeshes[0].position = new Vector3(0, 1, -2);
             newMeshes[0].scaling.set(0.04, 0.04, 0.04);
             newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+            sceneState.allMeshes.push(newMeshes[0] as Mesh);
         });
-
-        // SceneLoader.ImportMesh("", "src/test/", "test2.obj", scene, function (newMeshes) {
-        //     newMeshes[0].position = new Vector3(0, 1, -2);
-        //     newMeshes[0].scaling.set(0.04, 0.04, 0.04);
-        //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
-        // });
 
         let mat = new StandardMaterial("material", scene);
         mat.diffuseColor = new Color3(1,1,0)
-
-        // SceneLoader.ImportMesh("", "src/Chair/", "untitled.obj", scene, function (newMeshes) {
-        //     newMeshes[0].position = new Vector3(0, 0.5, 1);
-        //     newMeshes[0].scaling.set(0.1, 0.1, 0.1);
-        //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
-        //     newMeshes[0].material = mat;
-        //     sceneState.allMeshes.push(newMeshes[0] as Mesh);
-        //     console.log("Chair Imported");
-        // });
 
         this.vrState.camera = webVr.webVRCamera;
         webVr.webVRCamera.onControllersAttachedObservable.add(() => {
