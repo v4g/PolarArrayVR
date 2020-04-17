@@ -51,8 +51,6 @@ export class PolarArrayGUI {
         this.createConfirmationText();
         this.confirmationObserver = this.confirmationListener.bind(this);
         this.cancelObserver = this.cancelListener.bind(this);
-        this.confirmationObserverRibbon = this.confirmationListenerRibbon.bind(this);
-        this.cancelObserver = this.cancelListener.bind(this);
         
         this.createNumberPanel();
         this.hideNumberPanel();
