@@ -394,7 +394,11 @@ export class PolarArrayGUI {
     cancelListener(event: any) {
         if (event.pressed) {
             console.log("Cancelled");
-            this.exitParamsMode();
+            if (this.state == PolarArrayGUI.AXIS_MODE) {
+                this.exitAxisMode();
+            } else {
+                this.exitParamsMode();
+            }
             PolarArrayManager.getInstance().cancelArray();
             PolarArrayManager.getInstance().selectMeshes();
         }

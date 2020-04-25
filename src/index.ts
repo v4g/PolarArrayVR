@@ -82,7 +82,7 @@ class MyScene {
         // Add and manipulate meshes in the scene
 
         var sphere = MeshBuilder.CreateBox("sphere", { size: 0.02 }, this.scene);
-        sphere.position.set(0.2, 1.5, 0.2);
+        sphere.position.set(0.2, 1.5, -0.2);
         this.sphere = sphere;
         console.log("something");
 
@@ -138,13 +138,13 @@ class MyScene {
         // });
         
         SceneLoader.ImportMesh("", "src/models/", "turbine.obj", scene, function (newMeshes) {
-            newMeshes[0].position = new Vector3(0, 1, -2);
+            newMeshes[0].position = new Vector3(0, 1, 2);
             newMeshes[0].scaling.set(0.04, 0.04, 0.04);
             newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
         });
 
         SceneLoader.ImportMesh("", "src/models/", "blade.obj", scene, function (newMeshes) {
-            newMeshes[0].position = new Vector3(0, 1, -2);
+            newMeshes[0].position = new Vector3(0, 1, 2);
             newMeshes[0].scaling.set(0.04, 0.04, 0.04);
             newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
             sceneState.allMeshes.push(newMeshes[0] as Mesh);
