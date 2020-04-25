@@ -112,10 +112,8 @@ export class PolarArrayManager {
 
     finalizeRibbon() {
         const allMeshes = SceneState.getInstance().allMeshes;
-        this.render.copies.forEach(copy => {
-            allMeshes.push(copy);
-        });
         this.render.renderRibbon();
+        allMeshes.push(this.render.ribbon);
         this.render.finalize();
     }
 }

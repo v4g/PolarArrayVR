@@ -92,15 +92,17 @@ export class PolarArrayRender {
                 close = true;
             }
             this.ribbon = MeshBuilder.CreateRibbon("polar" + Math.random() * 100, { pathArray: controlPoints, closePath: close, sideOrientation: Mesh.DOUBLESIDE });
+            this.destroyCopies();
+            for (let j = 0; j < polar.meshes.length; j++) {
+                SceneState.getInstance().scene.removeMesh(polar.meshes[j]);
+                polar.meshes[j].dispose();
+            }
         }
     }
 
     destroy() {
         console.log("Destroying this");
-        this.copies.forEach(copy => {
-            SceneState.getInstance().scene.removeMesh(copy);
-            copy.dispose();
-        })
+        this.destroyCopies();
         SceneState.getInstance().scene.removeMesh(this.axis);
         this.axis.dispose(false, true);
         if (this.ribbon) {
@@ -108,6 +110,12 @@ export class PolarArrayRender {
             this.ribbon.dispose();
         }
 
+    }
+    destroyCopies() {
+        this.copies.forEach(copy => {
+            SceneState.getInstance().scene.removeMesh(copy);
+            copy.dispose();
+        })        
     }
     finalize() {
         SceneState.getInstance().scene.removeMesh(this.axis);

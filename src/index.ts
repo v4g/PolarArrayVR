@@ -174,31 +174,6 @@ class MyScene {
 
     beforeRender() {
         SceneState.getInstance().callAllBeforeRenders();
-        // const positions = []
-        // for (let i = 0; i < this.clones.length; i++) {
-        //     if (this.clones[i] != null) {
-        //         positions.push((this.clones[i] as Mesh).position.clone());
-        //         this.scene.removeMesh(this.clones[i] as Mesh);
-        //         (this.clones[i] as Mesh).dispose();
-        //         this.clones[i] = null;
-        //     }
-        // }
-        // this.clones = []
-        // for (let i = 0; i < 50; i++) {
-        //     var clone = this.sphere.clone();
-        //     if (positions.length > i)
-        //         clone.position = positions[i];
-        //     else 
-        //         clone.position.addInPlace(new Vector3(i * 0.1, 0, 0));
-        //     this.scene.addMesh(clone);
-        //     this.clones.push(clone);
-        // }
-
-        // for (let i = 0; i < this.clones.length; i++) {
-        //     let deltaX = Math.random() * 0.002 - 0.001;
-        //     let deltaY = Math.random() * 0.002 - 0.001;
-        //     (this.clones[i] as Mesh).position.addInPlace(new Vector3(deltaX, deltaY, 0));
-        // }
     }
 }
 /******* End of the create scene function ******/
