@@ -3,7 +3,9 @@
     "version": "1.0.0",
     "description": "Sample for Assignment 0, CS 4803/8803 3DUI, Spring 2020",
     "main": "index.ts",
-    "dependencies": {},
+    "dependencies": {
+        "@babylonjs/serializers": "^4.1.0"
+    },
     "devDependencies": {
         "@babylonjs/core": "^4.1.0",
         "@babylonjs/gui": "^4.0.3",

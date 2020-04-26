@@ -1,5 +1,6 @@
 import {WebVRController, WebVRFreeCamera, Camera, Vector3} from "@babylonjs/core";
 import { SceneState } from ".";
+import { OBJExport} from "@babylonjs/serializers";
 export class VRState {
     valid = false;
     private _leftController!: WebVRController;
@@ -66,6 +67,14 @@ export class VRState {
                 this.eventValidR = true;
             }
         })
+        right.onPadStateChangedObservable.add((event)=> {
+            if(event.pressed) {
+                const obj = OBJExport.OBJ(SceneState.getInstance().allMeshes, false, undefined, true);
+                console.log(obj);
+            }
+            
+        });
+        
         right.onButtonStateChange((controlledIndex, index, state) => {
             if (index == 2) {
                 this.secondaryTriggerR(state);

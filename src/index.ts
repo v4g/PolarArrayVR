@@ -137,18 +137,18 @@ class MyScene {
         //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
         // });
         
-        SceneLoader.ImportMesh("", "src/models/", "turbine.obj", scene, function (newMeshes) {
-            newMeshes[0].position = new Vector3(0, 1, 2);
-            newMeshes[0].scaling.set(0.04, 0.04, 0.04);
-            newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
-        });
+        // SceneLoader.ImportMesh("", "src/models/", "turbine.obj", scene, function (newMeshes) {
+        //     newMeshes[0].position = new Vector3(0, 1, 2);
+        //     newMeshes[0].scaling.set(0.04, 0.04, 0.04);
+        //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        // });
 
-        SceneLoader.ImportMesh("", "src/models/", "blade.obj", scene, function (newMeshes) {
-            newMeshes[0].position = new Vector3(0, 1, 2);
-            newMeshes[0].scaling.set(0.04, 0.04, 0.04);
-            newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
-            sceneState.allMeshes.push(newMeshes[0] as Mesh);
-        });
+        // SceneLoader.ImportMesh("", "src/models/", "blade.obj", scene, function (newMeshes) {
+        //     newMeshes[0].position = new Vector3(0, 1, 2);
+        //     newMeshes[0].scaling.set(0.04, 0.04, 0.04);
+        //     newMeshes[0].rotation.set(-Math.PI/2, Math.PI, 0);
+        //     sceneState.allMeshes.push(newMeshes[0] as Mesh);
+        // });
 
         let mat = new StandardMaterial("material", scene);
         mat.diffuseColor = new Color3(1,1,0)
@@ -163,7 +163,7 @@ class MyScene {
             }
             if (webVr.webVRCamera.rightController != null) {
                 this.vrState.rightController = webVr.webVRCamera.rightController;
-                webVr.webVRCamera.rightController.onSecondaryButtonStateChangedObservable.add((event) => {
+                webVr.webVRCamera.rightController.onSecondaryButtonStateChangedObservable.add(() => {
                 });
             }
             let pam = PolarArrayManager.getInstance();
